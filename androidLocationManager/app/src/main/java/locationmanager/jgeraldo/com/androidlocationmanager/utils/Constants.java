@@ -12,4 +12,12 @@ public class Constants {
 
     public static final String SETTINGS_FRAGMENT = "settings_fragment";
 
+    // Util Constants
+
+    public static final int LOCATION_PERMISSIONS_CODE = 0;
+
+    public static final int BUFFER_SIZE = 1024;
+
+    public static final int NEARBY_POINTS = 5;
+
 }

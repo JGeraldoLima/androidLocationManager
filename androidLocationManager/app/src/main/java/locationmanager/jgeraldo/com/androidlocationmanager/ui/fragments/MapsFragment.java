@@ -22,12 +22,16 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import io.github.yavski.fabspeeddial.FabSpeedDial;
 import io.github.yavski.fabspeeddial.SimpleMenuListenerAdapter;
 import locationmanager.jgeraldo.com.androidlocationmanager.R;
+import locationmanager.jgeraldo.com.androidlocationmanager.entities.MyLocationManager;
+import locationmanager.jgeraldo.com.androidlocationmanager.utils.Util;
 
 public class MapsFragment extends Fragment implements OnMapReadyCallback {
 
     public static Context mContext;
 
     private static FragmentActivity mActivity;
+
+    private MyLocationManager mLocationManager;
 
     private static Toolbar mToolbar;
 
@@ -38,6 +42,8 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
     private View view;
 
     private GoogleMap mMap;
+
+    private LatLng campina = new LatLng(-7.2190974, -35.903685);
 
     public MapsFragment() {
         super();
@@ -52,6 +58,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
         mToolbar = (Toolbar) mActivity.findViewById(R.id.toolbar);
 
         mFragmentManager = getChildFragmentManager();
+        mLocationManager = Util.getLocationManager();
     }
 
     @Override
@@ -83,6 +90,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
                 if (itemId == R.id.ic_save_current_location) {
                     return true;
                 } else if (itemId == R.id.ic_goto_my_position) {
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(campina, 16.0f));
                     return true;
                 }
                 return false;
@@ -99,8 +107,53 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        LatLng campina = new LatLng(-7.2190974, -35.903685);
+        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         mMap.addMarker(new MarkerOptions().position(campina).title("Marker in Campina Grande").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_my_location)));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(campina, 16.0f));
     }
+
+//    public void dialogGPSConnection() {
+//        final Dialog alertDialog = new Dialog(mActivity);
+//        alertDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+//        alertDialog.setContentView(R.layout.dialog_sentence);
+//
+//        TextView tvTitle = (TextView) alertDialog.findViewById(R.id.tvTitleDialogSentence);
+//        tvTitle.setText(Util.getString(mContext, R.string.gps));
+//
+//        TextView tvMessage = (TextView) alertDialog.findViewById(R.id.tvMessageDialogSentence);
+//        tvMessage.setText(Util.getString(mActivity.getApplicationContext(),
+//                R.string.gpsTimeout));
+//
+//        Button btOk = (Button) alertDialog.findViewById(R.id.btOkDialogSentence);
+//        btOk.setText(Util.getString(mContext, R.string.positiveSentence));
+//        btOk.setOnClickListener(new View.OnClickListener() {
+//
+//            @Override
+//            public void onClick(final View v) {
+//                Location betterLocation = mLocationManager
+//                        .getBetterLocation();
+//                if (MyLocationManager.isLocationInvalid(betterLocation)) {
+//                    mLocationManager.dialogInvalidPosition(mContext, mActivity, false);
+//                    alertDialog.dismiss();
+//                } else {
+//                    //seta posicao no mapa
+//                    mLocationManager.setTimeoutFinished(false);
+//                    alertDialog.dismiss();
+//                }
+//            }
+//        });
+//
+//        Button btCancel = (Button) alertDialog.findViewById(R.id.btCancelDialogSentence);
+//        btCancel.setText(Util.getString(mContext, R.string.negativeSentence));
+//        btCancel.setOnClickListener(new View.OnClickListener() {
+//
+//            @Override
+//            public void onClick(final View v) {
+//                mLocationManager.setTimeoutFinished(false);
+//                alertDialog.dismiss();
+//            }
+//        });
+//
+//        alertDialog.show();
+//    }
 }
