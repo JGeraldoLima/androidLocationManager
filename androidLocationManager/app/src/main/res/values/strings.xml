@@ -1,13 +1,16 @@
 <resources>
     <string name="app_name">androidLocationManager</string>
 
-    <string name="nav_add_poi">Save current location</string>
+    <string name="nav_add_poi">Add location to Favorites</string>
     <string name="nav_map">Map</string>
-    <string name="nav_list_poi">List of Saved Locations</string>
+    <string name="nav_list_poi">Favorite locations</string>
     <string name="nav_settings">Settings</string>
     <string name="nav_share_me">Share me!</string>
     <string name="nav_contact">Contact</string>
 
     <string name="fab_goto_my_position">Go to my position</string>
     <string name="nav_plus">Plus</string>
+    <string name="current_location">Current location</string>
+    <string name="default_location">Marker in Campina Grande - PB, BR</string>
+    <string name="getting_current_location">Getting your current coordinates . . .</string>
 </resources>

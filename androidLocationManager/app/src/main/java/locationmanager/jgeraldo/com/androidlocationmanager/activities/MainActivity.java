@@ -26,6 +26,7 @@ import locationmanager.jgeraldo.com.androidlocationmanager.receivers.PhoneUnlock
 import locationmanager.jgeraldo.com.androidlocationmanager.ui.fragments.MapsFragment;
 import locationmanager.jgeraldo.com.androidlocationmanager.utils.Constants;
 import locationmanager.jgeraldo.com.androidlocationmanager.utils.KeyWatcher;
+import locationmanager.jgeraldo.com.androidlocationmanager.utils.Preferences;
 import locationmanager.jgeraldo.com.androidlocationmanager.utils.Util;
 
 public class MainActivity extends AppCompatActivity
@@ -97,7 +98,7 @@ public class MainActivity extends AppCompatActivity
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Util.grantLocationPermissions();
+                    Preferences.setLocationPermissionsGrantFlag(mContext, true);
                     mLocationManager.checkLocationServicesStatus();
                 } else {
 
@@ -148,10 +149,7 @@ public class MainActivity extends AppCompatActivity
         Intent intent = null;
         String tag = Constants.MAPS_FRAGMENT;
 
-        if (itemId == R.id.nav_add_poi) {
-            tag = Constants.ADD_POI_FRAGMENT;
-//            fragment = new AddPOIFragment();
-        } else if (itemId == R.id.nav_map) {
+        if (itemId == R.id.nav_map) {
             tag = Constants.MAPS_FRAGMENT;
             fragment = new MapsFragment();
 //            intent = new Intent(mActivity, MapsActivity.class);

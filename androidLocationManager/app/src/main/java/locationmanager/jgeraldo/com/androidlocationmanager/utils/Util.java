@@ -51,22 +51,13 @@ public final class Util {
         return gpsManager;
     }
 
-    public static void grantLocationPermissions() {
-        //atualizar Preferences
-        locationPermissionsGranted = true;
-    }
-
     public static void checkLocationPermissions(Activity activity) {
-        if (!Util.isLocationPermissionsGranted()) {
+        if (!Preferences.getLocationPermissionsGrantFlag(activity.getApplicationContext())) {
             ActivityCompat.requestPermissions(activity,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
                             Manifest.permission.ACCESS_COARSE_LOCATION},
                     Constants.LOCATION_PERMISSIONS_CODE);
         }
-    }
-
-    public static boolean isLocationPermissionsGranted() {
-        return locationPermissionsGranted;
     }
 
     public static boolean isConnected(final Context context) {

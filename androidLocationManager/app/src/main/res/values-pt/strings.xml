@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">androidLocationManager</string>
-    <string name="nav_add_poi">Salvar posição atual</string>
+    <string name="nav_add_poi">Adicionar local aos Favoritos</string>
     <string name="nav_map">Mapa</string>
-    <string name="nav_list_poi">Lista de Locais Salvos</string>
+    <string name="nav_list_poi">Locais favoritos</string>
     <string name="nav_settings">Configurações</string>
     <string name="nav_contact">Contato</string>
     <string name="fab_goto_my_position">Vá para minha posição</string>
     <string name="nav_share_me">Compartilhe!</string>
     <string name="nav_plus">Mais</string>
+    <string name="current_location">Local atual</string>
+    <string name="default_location">Marcador em Campina Grande - PB, BR</string>
+    <string name="getting_current_location">Calculando suas coordenadas atuais . . .</string>
 </resources>

@@ -13,6 +13,7 @@ import com.google.android.gms.location.LocationServices;
 
 import locationmanager.jgeraldo.com.androidlocationmanager.listeners.NetworkLocationListener;
 import locationmanager.jgeraldo.com.androidlocationmanager.listeners.SatelliteLocationListener;
+import locationmanager.jgeraldo.com.androidlocationmanager.utils.Preferences;
 import locationmanager.jgeraldo.com.androidlocationmanager.utils.Util;
 
 public final class MyLocationManager {
@@ -122,7 +123,7 @@ public final class MyLocationManager {
     }
 
     public void setLastKnownLocation() {
-        if (!Util.isLocationPermissionsGranted()) return;
+        if (!Preferences.getLocationPermissionsGrantFlag(mContext)) return;
         Location lastKnownGPS = getBetterLocationAux(mLocationManager
                 .getLastKnownLocation(LocationManager.GPS_PROVIDER), mSatelliteLocation);
         Location lastKnownNetwork = getBetterLocationAux(mLocationManager
@@ -228,7 +229,7 @@ public final class MyLocationManager {
     }
 
     public void startUpdates(final boolean useGPS, final boolean useNetwork) {
-        if (!Util.isLocationPermissionsGranted()) return;
+        if (!Preferences.getLocationPermissionsGrantFlag(mContext)) return;
         if (useGPS) {
             mLocationManager.requestLocationUpdates(
                     LocationManager.GPS_PROVIDER, LOCATION_MANAGER_MIN_TIME,
@@ -246,7 +247,7 @@ public final class MyLocationManager {
     }
 
     public void stopUpdates(final boolean clearData) {
-        if (!Util.isLocationPermissionsGranted()) return;
+        if (!Preferences.getLocationPermissionsGrantFlag(mContext)) return;
         mLocationManager.removeUpdates(mSatteliteLocationListener);
         setGPSUpdatingStatus(false);
 
@@ -487,7 +488,7 @@ public final class MyLocationManager {
         protected void onPostExecute(final Void result) {
             super.onPostExecute(result);
             Log.i("NETWORK", "CONNECTED");
-            if (!Util.isLocationPermissionsGranted()) return;
+            if (!Preferences.getLocationPermissionsGrantFlag(mContext)) return;
             LocationServices.FusedLocationApi
                     .requestLocationUpdates(mLocationClient, mLocationRequest,
                             mNetworkLocationListener);

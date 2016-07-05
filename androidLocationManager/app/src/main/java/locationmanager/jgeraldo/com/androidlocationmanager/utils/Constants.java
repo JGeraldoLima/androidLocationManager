@@ -14,10 +14,19 @@ public class Constants {
 
     // Util Constants
 
+    public static final String PREFS_NAME = "androidLocationManager";
+
+    public static final String LOCATION_PERMISSIONS_FLAG = "hasLocationPermissions";
+
     public static final int LOCATION_PERMISSIONS_CODE = 0;
 
     public static final int BUFFER_SIZE = 1024;
 
     public static final int NEARBY_POINTS = 5;
+
+    // Locations Constantes
+
+    public static final float DEFAULT_MAP_ZOOM = 16.6f;
+
 
 }

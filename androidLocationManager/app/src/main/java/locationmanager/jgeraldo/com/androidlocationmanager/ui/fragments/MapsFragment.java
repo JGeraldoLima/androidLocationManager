@@ -1,11 +1,16 @@
 package locationmanager.jgeraldo.com.androidlocationmanager.ui.fragments;
 
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -15,17 +20,21 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import io.github.yavski.fabspeeddial.FabSpeedDial;
 import io.github.yavski.fabspeeddial.SimpleMenuListenerAdapter;
 import locationmanager.jgeraldo.com.androidlocationmanager.R;
+import locationmanager.jgeraldo.com.androidlocationmanager.entities.GPSCountDownTimeout;
 import locationmanager.jgeraldo.com.androidlocationmanager.entities.MyLocationManager;
+import locationmanager.jgeraldo.com.androidlocationmanager.utils.Constants;
 import locationmanager.jgeraldo.com.androidlocationmanager.utils.Util;
 
-public class MapsFragment extends Fragment implements OnMapReadyCallback {
+public class MapsFragment extends Fragment implements OnMapReadyCallback, GoogleMap.OnMapClickListener {
 
     public static Context mContext;
 
@@ -43,7 +52,14 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
 
     private GoogleMap mMap;
 
-    private LatLng campina = new LatLng(-7.2190974, -35.903685);
+    private Marker currentMarker;
+
+    private MarkerOptions currentMarkerOptions;
+
+    private LatLng currentMarkerLocation = new LatLng(-7.2190974, -35.903685);
+    ;
+
+    private BitmapDescriptor myLocation;
 
     public MapsFragment() {
         super();
@@ -68,7 +84,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
         if (view == null) {
             view = inflater.inflate(R.layout.fragment_map, container, false);
 
-            setFabActions();
+            setViews();
             setUpMap();
 
         } else {
@@ -80,7 +96,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
         return view;
     }
 
-    private void setFabActions() {
+    private void setViews() {
         mFabAdd = (FabSpeedDial) view.findViewById(R.id.fab_map);
         mFabAdd.setMenuListener(new SimpleMenuListenerAdapter() {
             @Override
@@ -88,9 +104,13 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
                 int itemId = menuItem.getItemId();
 
                 if (itemId == R.id.ic_save_current_location) {
+                    Snackbar.make(mActivity.findViewById(android.R.id.content), "Location: "
+                            + currentMarkerLocation.latitude
+                            + "; " + currentMarkerLocation.longitude,
+                            Snackbar.LENGTH_SHORT).setAction("Action", null).show();
                     return true;
                 } else if (itemId == R.id.ic_goto_my_position) {
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(campina, 16.0f));
+                    new GetCurrentCoordinates().execute();
                     return true;
                 }
                 return false;
@@ -103,13 +123,36 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
         mapFragment.getMapAsync(this);
     }
 
+    private void updateMapPosition(){
+        if (currentMarker != null) {
+            currentMarker.remove();
+        }
+
+        currentMarkerOptions = new MarkerOptions()
+                .position(currentMarkerLocation)
+                .title(Util.getString(mContext, R.string.current_location))
+                .icon(myLocation);
+        currentMarker = mMap.addMarker(currentMarkerOptions);
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentMarkerLocation, Constants.DEFAULT_MAP_ZOOM));
+    }
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        myLocation = BitmapDescriptorFactory.fromResource(R.mipmap.ic_my_location);
+        currentMarkerOptions = new MarkerOptions().position(currentMarkerLocation).title(Util.getString(mContext, R.string.default_location)).icon(myLocation);
+
         mMap = googleMap;
 
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-        mMap.addMarker(new MarkerOptions().position(campina).title("Marker in Campina Grande").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_my_location)));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(campina, 16.0f));
+        mMap.setOnMapClickListener(this);
+        currentMarker = mMap.addMarker(currentMarkerOptions);
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentMarkerLocation, Constants.DEFAULT_MAP_ZOOM));
+    }
+
+    @Override
+    public void onMapClick(LatLng point) {
+        currentMarkerLocation = point;
+        updateMapPosition();
     }
 
 //    public void dialogGPSConnection() {
@@ -156,4 +199,143 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback {
 //
 //        alertDialog.show();
 //    }
+
+    private class GetCurrentCoordinates extends AsyncTask<Void, Void, Void> {
+
+        /** The progress dialog. */
+        private ProgressDialog progressDialog;
+
+        /** The progress message. */
+        private final String progressMessage = Util.getString(mContext, R.string.getting_current_location);
+
+        /** The m timeout. */
+        private GPSCountDownTimeout mTimeout;
+
+        /*
+         * (non-Javadoc)
+         * @see android.os.AsyncTask#onPreExecute()
+         */
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressDialog = new ProgressDialog(mActivity);
+            progressDialog.setCancelable(true);
+            progressDialog.setMessage(progressMessage);
+            progressDialog.show();
+            mTimeout = new GPSCountDownTimeout(mContext, this, progressDialog,
+                    progressMessage, MyLocationManager.GPS_TIMEOUT,
+                    MyLocationManager.GPS_TIMEOUT_INTERVAL, true);
+            mTimeout.start();
+        }
+
+        /*
+         * (non-Javadoc)
+         * @see android.os.AsyncTask#doInBackground(Params[])
+         */
+        @Override
+        protected Void doInBackground(final Void... params) {
+
+            if (mLocationManager.isGPSEnable()) {
+                Log.e("CAPTURE", "BY BOTH");
+                while (MyLocationManager.isLocationInvalid(
+                        mLocationManager.getSatelliteLocation())
+                        && !mLocationManager.isTimeoutFinished() && !isCancelled()) {
+                    Log.i("Location", "SEARCHING LOCATION");
+                }
+            } else {
+                Log.e("CAPTURE", "BY NETWORK");
+                while (MyLocationManager
+                        .isLocationInvalid(mLocationManager.getNetworkLocation())
+                        && !mLocationManager.isTimeoutFinished() && !isCancelled()) {
+                    Log.i("Location", "SEARCHING LOCATION");
+                }
+            }
+            return null;
+        }
+
+        /*
+         * (non-Javadoc)
+         * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
+         */
+        @Override
+        protected void onPostExecute(final Void result) {
+            super.onPostExecute(result);
+
+            try {
+                if (progressDialog.isShowing()) {
+                    progressDialog.dismiss();
+                }
+            } catch (Exception e) {
+                Log.e("Map", e.getMessage());
+            }
+
+            mTimeout.cancel();
+
+            Location betterLocation = mLocationManager.getBetterLocation();
+
+            if (MyLocationManager
+                    .isLocationInvalid(mLocationManager.getSatelliteLocation())) {
+                if (MyLocationManager
+                        .isLocationInvalid(mLocationManager.getNetworkLocation())) {
+                    Location lastKnowLoc = mLocationManager.getLastKnownLocation();
+                    if (MyLocationManager
+                            .isLocationInvalid(lastKnowLoc)) {
+                        mActivity.runOnUiThread(new Runnable() {
+                            public void run() {
+//                                dialogGPSConnection();
+                            }
+                        });
+                    } else {
+                        currentMarkerLocation = new LatLng(lastKnowLoc.getLatitude(), lastKnowLoc.getLongitude());
+                        updateMapPosition();
+                    }
+
+                } else {
+                    currentMarkerLocation = new LatLng(betterLocation.getLatitude(), betterLocation.getLongitude());
+                    updateMapPosition();
+                }
+            } else {
+                Location satteliteLocation = mLocationManager.getSatelliteLocation();
+                currentMarkerLocation = new LatLng(satteliteLocation.getLatitude(), satteliteLocation.getLongitude());
+                updateMapPosition();
+            }
+        }
+
+        /*
+         * (non-Javadoc)
+         * @see android.os.AsyncTask#onCancelled()
+         */
+        @Override
+        protected void onCancelled() {
+            mTimeout.cancel();
+            mLocationManager.setTimeoutFinished(false);
+
+            try {
+                progressDialog.dismiss();
+            } catch (Exception e) {
+                Log.e("Map", e.getMessage());
+            }
+
+            mActivity.runOnUiThread(new Runnable() {
+                public void run() {
+                    //dialogGPSConnection();
+                }
+            });
+        }
+
+        /*
+         * (non-Javadoc)
+         * @see android.os.AsyncTask#onCancelled(java.lang.Object)
+         */
+        @Override
+        protected void onCancelled(final Void result) {
+            mTimeout.cancel();
+            mLocationManager.setTimeoutFinished(false);
+            mActivity.runOnUiThread(new Runnable() {
+                public void run() {
+                    //dialogGPSConnection();
+                }
+            });
+        }
+    }
 }
