@@ -13,8 +13,7 @@ import com.google.android.gms.location.LocationServices;
 
 import locationmanager.jgeraldo.com.androidlocationmanager.listeners.NetworkLocationListener;
 import locationmanager.jgeraldo.com.androidlocationmanager.listeners.SatelliteLocationListener;
-import locationmanager.jgeraldo.com.androidlocationmanager.utils.Preferences;
-import locationmanager.jgeraldo.com.androidlocationmanager.utils.Util;
+import locationmanager.jgeraldo.com.androidlocationmanager.storage.Preferences;
 
 public final class MyLocationManager {
 

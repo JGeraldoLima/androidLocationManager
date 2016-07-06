@@ -23,6 +23,10 @@
                 android:icon="@mipmap/ic_share"
                 android:title="@string/nav_share_me" />
             <item
+                android:id="@+id/nav_about"
+                android:icon="@mipmap/ic_info"
+                android:title="@string/nav_about" />
+            <item
                 android:id="@+id/nav_contact"
                 android:icon="@mipmap/ic_send"
                 android:title="@string/nav_contact" />

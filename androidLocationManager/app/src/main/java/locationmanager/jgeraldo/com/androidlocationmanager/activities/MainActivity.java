@@ -26,11 +26,11 @@ import locationmanager.jgeraldo.com.androidlocationmanager.receivers.PhoneUnlock
 import locationmanager.jgeraldo.com.androidlocationmanager.ui.fragments.MapsFragment;
 import locationmanager.jgeraldo.com.androidlocationmanager.utils.Constants;
 import locationmanager.jgeraldo.com.androidlocationmanager.utils.KeyWatcher;
-import locationmanager.jgeraldo.com.androidlocationmanager.utils.Preferences;
+import locationmanager.jgeraldo.com.androidlocationmanager.storage.Preferences;
 import locationmanager.jgeraldo.com.androidlocationmanager.utils.Util;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+    implements NavigationView.OnNavigationItemSelectedListener {
 
     private Activity mActivity;
 
@@ -63,13 +63,15 @@ public class MainActivity extends AppCompatActivity
         mPhoneLockWatcher = new PhoneUnlockedReceiver();
 
         registerReceiver(mPhoneLockWatcher, new IntentFilter(
-                ACTION_USER_PRESENT));
+            ACTION_USER_PRESENT));
 
         setHomeWatcher();
 
         Util.checkLocationPermissions(mActivity);
         Util.initGPSManager(mContext, mActivity);
         mLocationManager = Util.getLocationManager();
+
+        Util.initDataBase(mContext);
 
         loadViewComponents();
         displayView(R.id.nav_map);
@@ -97,7 +99,7 @@ public class MainActivity extends AppCompatActivity
             case Constants.LOCATION_PERMISSIONS_CODE: {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Preferences.setLocationPermissionsGrantFlag(mContext, true);
                     mLocationManager.checkLocationServicesStatus();
                 } else {
@@ -129,7 +131,7 @@ public class MainActivity extends AppCompatActivity
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, mToolbar, 0, 0);
+            this, drawer, mToolbar, 0, 0);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
@@ -160,6 +162,7 @@ public class MainActivity extends AppCompatActivity
             tag = Constants.SETTINGS_FRAGMENT;
 //            fragment = new SettingsFragment();
         } else if (itemId == R.id.nav_share) {
+        } else if (itemId == R.id.nav_about) {
         } else if (itemId == R.id.nav_contact) {
         }
 
@@ -180,24 +183,6 @@ public class MainActivity extends AppCompatActivity
         mTransaction.replace(R.id.frame_container, fragment, tag);
         mTransaction.addToBackStack(null);
         mTransaction.commit();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 
     @Override

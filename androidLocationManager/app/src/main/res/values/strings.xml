@@ -13,4 +13,5 @@
     <string name="current_location">Current location</string>
     <string name="default_location">Marker in Campina Grande - PB, BR</string>
     <string name="getting_current_location">Getting your current coordinates . . .</string>
+    <string name="nav_about">About the developer</string>
 </resources>

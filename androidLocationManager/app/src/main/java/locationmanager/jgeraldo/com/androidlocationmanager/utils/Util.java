@@ -27,12 +27,14 @@ import java.util.Locale;
 
 import locationmanager.jgeraldo.com.androidlocationmanager.entities.MyLocation;
 import locationmanager.jgeraldo.com.androidlocationmanager.entities.MyLocationManager;
+import locationmanager.jgeraldo.com.androidlocationmanager.storage.Database;
+import locationmanager.jgeraldo.com.androidlocationmanager.storage.Preferences;
 
 public final class Util {
 
     private static MyLocationManager gpsManager;
 
-    private static boolean locationPermissionsGranted = false;
+    private static Database dataBase;
 
     public static int mNearbyPointsCounter = 0;
 
@@ -43,6 +45,14 @@ public final class Util {
         gpsManager = new MyLocationManager(context, activity);
     }
 
+    public static void initDataBase(final Context context) {
+        dataBase = new Database(context);
+    }
+
+    public static void closeDataBaseInstance() {
+        dataBase.close();
+    }
+
     public static String getString(final Context context, final int id) {
         return context.getResources().getString(id);
     }
@@ -51,22 +61,26 @@ public final class Util {
         return gpsManager;
     }
 
+    public static Database getDataBase() {
+        return dataBase;
+    }
+
     public static void checkLocationPermissions(Activity activity) {
         if (!Preferences.getLocationPermissionsGrantFlag(activity.getApplicationContext())) {
             ActivityCompat.requestPermissions(activity,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
-                            Manifest.permission.ACCESS_COARSE_LOCATION},
-                    Constants.LOCATION_PERMISSIONS_CODE);
+                new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION},
+                Constants.LOCATION_PERMISSIONS_CODE);
         }
     }
 
     public static boolean isConnected(final Context context) {
         boolean connected;
         final ConnectivityManager conectivtyManager = (ConnectivityManager)
-                context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            context.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (conectivtyManager.getActiveNetworkInfo() != null
-                && conectivtyManager.getActiveNetworkInfo().isAvailable()
-                && conectivtyManager.getActiveNetworkInfo().isConnected()) {
+            && conectivtyManager.getActiveNetworkInfo().isAvailable()
+            && conectivtyManager.getActiveNetworkInfo().isConnected()) {
             connected = true;
         } else {
             connected = false;
@@ -92,7 +106,7 @@ public final class Util {
     }
 
     private static class RouteCalculateTask
-            extends AsyncTask<Void, Void, Void> {
+        extends AsyncTask<Void, Void, Void> {
 
         private static JSONObject jsonLegs;
         private static JSONArray steps;
@@ -100,7 +114,7 @@ public final class Util {
         private static String urlRoute;
         private URL mFeedURL;
         private static double mUserLatitude, mUserLongitude,
-                pointLatitude, pointLongitude;
+            pointLatitude, pointLongitude;
 
         public RouteCalculateTask(double userLatitude, double userLongitude, Double destinyLatitude, Double destinyLongitude) {
             mUserLatitude = userLatitude;
@@ -121,12 +135,12 @@ public final class Util {
 
             // pegar locale do device
             this.urlRoute = String.format(Locale.US,
-                    "http://maps.googleapis.com/maps/api/"
-                            + "directions/json?origin="
-                            + "%f,%f&destination=%f,%f"
-                            + "&sensor=true&mode=walking",
-                    mUserLatitude, mUserLongitude,
-                    pointLatitude, pointLongitude);
+                "http://maps.googleapis.com/maps/api/"
+                    + "directions/json?origin="
+                    + "%f,%f&destination=%f,%f"
+                    + "&sensor=true&mode=walking",
+                mUserLatitude, mUserLongitude,
+                pointLatitude, pointLongitude);
             try {
                 this.mFeedURL = new URL(urlRoute);
 
@@ -163,7 +177,7 @@ public final class Util {
         private void jsonLegs() throws JSONException, IOException {
             JSONObject json;
             json = new JSONObject(convertStreamToString(this.mFeedURL.openConnection()
-                    .getInputStream()));
+                .getInputStream()));
 
             Log.e("__json", json.toString());
 
@@ -173,7 +187,7 @@ public final class Util {
     }
 
     public static String convertStreamToString(final InputStream input)//igual ao
-            throws IOException {
+        throws IOException {
 
         if (input == null) {
             return "";
@@ -183,7 +197,7 @@ public final class Util {
             final char[] buffer = new char[Constants.BUFFER_SIZE];
             try {
                 final Reader reader = new BufferedReader(new InputStreamReader(
-                        input, "UTF-8"));
+                    input, "UTF-8"));
                 int n;
                 while ((n = reader.read(buffer)) != -1) {
                     writer.write(buffer, 0, n);

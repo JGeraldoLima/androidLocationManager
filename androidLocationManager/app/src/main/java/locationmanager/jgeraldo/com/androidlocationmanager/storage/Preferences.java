@@ -1,8 +1,10 @@
-package locationmanager.jgeraldo.com.androidlocationmanager.utils;
+package locationmanager.jgeraldo.com.androidlocationmanager.storage;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+
+import locationmanager.jgeraldo.com.androidlocationmanager.utils.Constants;
 
 @SuppressLint("CommitPrefEdits")
 public class Preferences {
