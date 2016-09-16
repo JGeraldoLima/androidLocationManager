@@ -57,7 +57,6 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
     private MarkerOptions currentMarkerOptions;
 
     private LatLng currentMarkerLocation = new LatLng(-7.2190974, -35.903685);
-    ;
 
     private BitmapDescriptor myLocation;
 
