@@ -181,7 +181,7 @@ public class MainActivity extends AppCompatActivity
         } else {
             if (mFragmentManager.getBackStackEntryCount() <= 1) {
                 mLocationManager.stopUpdates(false);
-//                Util.openQuestionAlertDialog(mActivity, Util.getString(mContext, R.string.quit_message), true);
+                Util.openQuestionAlertDialog(mActivity, Util.getString(mContext, R.string.quit_message), true);
             } else {
                 mFragmentManager.popBackStackImmediate();
             }

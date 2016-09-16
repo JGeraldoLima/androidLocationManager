@@ -2,11 +2,10 @@ package locationmanager.jgeraldo.com.androidlocationmanager.ui.fragments;
 
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.design.widget.Snackbar;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -17,6 +16,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.afollestad.materialdialogs.DialogAction;
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -87,7 +88,6 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
 
             setViews();
             setUpMap();
-
         } else {
             ViewGroup parent = (ViewGroup) view.getParent();
             if (parent != null) {
@@ -100,7 +100,6 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
-
         Util.onRequestPermissionsResult(mActivity, mContext, requestCode, grantResults);
     }
 
@@ -166,50 +165,39 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
         updateMapPosition();
     }
 
-//    public void dialogGPSConnection() {
-//        final Dialog alertDialog = new Dialog(mActivity);
-//        alertDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-//        alertDialog.setContentView(R.layout.dialog_sentence);
-//
-//        TextView tvTitle = (TextView) alertDialog.findViewById(R.id.tvTitleDialogSentence);
-//        tvTitle.setText(Util.getString(mContext, R.string.gps));
-//
-//        TextView tvMessage = (TextView) alertDialog.findViewById(R.id.tvMessageDialogSentence);
-//        tvMessage.setText(Util.getString(mActivity.getApplicationContext(),
-//                R.string.gpsTimeout));
-//
-//        Button btOk = (Button) alertDialog.findViewById(R.id.btOkDialogSentence);
-//        btOk.setText(Util.getString(mContext, R.string.positiveSentence));
-//        btOk.setOnClickListener(new View.OnClickListener() {
-//
-//            @Override
-//            public void onClick(final View v) {
-//                Location betterLocation = mLocationManager
-//                        .getBetterLocation();
-//                if (MyLocationManager.isLocationInvalid(betterLocation)) {
-//                    mLocationManager.dialogInvalidPosition(mContext, mActivity, false);
-//                    alertDialog.dismiss();
-//                } else {
-//                    //seta posicao no mapa
-//                    mLocationManager.setTimeoutFinished(false);
-//                    alertDialog.dismiss();
-//                }
-//            }
-//        });
-//
-//        Button btCancel = (Button) alertDialog.findViewById(R.id.btCancelDialogSentence);
-//        btCancel.setText(Util.getString(mContext, R.string.negativeSentence));
-//        btCancel.setOnClickListener(new View.OnClickListener() {
-//
-//            @Override
-//            public void onClick(final View v) {
-//                mLocationManager.setTimeoutFinished(false);
-//                alertDialog.dismiss();
-//            }
-//        });
-//
-//        alertDialog.show();
-//    }
+    public void openLocationConnectionTimeout() {
+        MaterialDialog.Builder builder = new MaterialDialog.Builder(mActivity)
+            .title(R.string.notice)
+            .content(Util.getString(mContext, R.string.location_search_timeout))
+            .positiveColorRes(R.color.colorPrimaryDark)
+            .positiveText(R.string.ok)
+            .onPositive(new MaterialDialog.SingleButtonCallback() {
+                @Override
+                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    Location betterLocation = mLocationManager
+                        .getBetterLocation();
+                    if (MyLocationManager.isLocationInvalid(betterLocation)) {
+                        Util.openAlertDialog(mActivity, Util.getString(mContext, R.string.invalid_position), false);
+                        dialog.dismiss();
+                    } else {
+                        currentMarkerLocation = new LatLng(betterLocation.getLatitude(), betterLocation.getLongitude());
+                        updateMapPosition();
+                    }
+                }
+            })
+            .negativeColorRes(R.color.colorPrimaryDark)
+            .negativeText(R.string.cancel)
+            .onNegative(new MaterialDialog.SingleButtonCallback() {
+                @Override
+                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    mLocationManager.setTimeoutFinished(false);
+                    dialog.dismiss();
+                }
+            });
+
+        MaterialDialog alertDialog = builder.build();
+        alertDialog.show();
+    }
 
     private class GetCurrentCoordinates extends AsyncTask<Void, Void, Void> {
 
@@ -299,7 +287,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
                         .isLocationInvalid(lastKnowLoc)) {
                         mActivity.runOnUiThread(new Runnable() {
                             public void run() {
-//                                dialogGPSConnection();
+                                openLocationConnectionTimeout();
                             }
                         });
                     } else {
@@ -335,7 +323,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
 
             mActivity.runOnUiThread(new Runnable() {
                 public void run() {
-                    //dialogGPSConnection();
+                    openLocationConnectionTimeout();
                 }
             });
         }
@@ -350,7 +338,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
             mLocationManager.setTimeoutFinished(false);
             mActivity.runOnUiThread(new Runnable() {
                 public void run() {
-                    //dialogGPSConnection();
+                    openLocationConnectionTimeout();
                 }
             });
         }

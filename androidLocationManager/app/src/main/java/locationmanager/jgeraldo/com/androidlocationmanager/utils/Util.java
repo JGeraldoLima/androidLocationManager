@@ -8,11 +8,15 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.os.AsyncTask;
+import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+
+import com.afollestad.materialdialogs.DialogAction;
+import com.afollestad.materialdialogs.MaterialDialog;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -104,6 +108,54 @@ public final class Util {
         textView.setMaxLines(4);
 
         snackbar.show();
+    }
+
+    public static void openAlertDialog(final Activity activity, String msgToShow, final boolean finishActivity) {
+        MaterialDialog.Builder builder = new MaterialDialog.Builder(activity)
+            .title(R.string.notice)
+            .content(msgToShow)
+            .positiveColorRes(R.color.colorPrimaryDark)
+            .positiveText(R.string.ok)
+            .onPositive(new MaterialDialog.SingleButtonCallback() {
+                @Override
+                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    if (finishActivity) {
+                        activity.finish();
+                    }
+                    dialog.dismiss();
+                }
+            });
+
+        MaterialDialog alertDialog = builder.build();
+        alertDialog.show();
+    }
+
+    public static void openQuestionAlertDialog(final Activity activity, String msgToShow, final boolean finishActivity) {
+        MaterialDialog.Builder builder = new MaterialDialog.Builder(activity)
+            .title(R.string.notice)
+            .content(msgToShow)
+            .positiveColorRes(R.color.colorPrimaryDark)
+            .negativeColorRes(R.color.colorPrimaryDark)
+            .positiveText(R.string.ok)
+            .negativeText(R.string.cancel)
+            .onPositive(new MaterialDialog.SingleButtonCallback() {
+                @Override
+                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    if (finishActivity) {
+                        activity.finish();
+                    }
+                    dialog.dismiss();
+                }
+            })
+            .onNegative(new MaterialDialog.SingleButtonCallback() {
+                @Override
+                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    dialog.dismiss();
+                }
+            });
+
+        MaterialDialog alertDialog = builder.build();
+        alertDialog.show();
     }
 
     public static boolean isConnected(final Context context) {

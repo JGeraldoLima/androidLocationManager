@@ -14,4 +14,9 @@
     <string name="getting_current_location">Calculando suas coordenadas atuais . . .</string>
     <string name="nav_about">Sobre o desenvolvedor</string>
     <string name="locations_permission_denied_msg">Não será possível utilizar os Serviços de Localização até que você conceda esta permissão.</string>
+    <string name="notice">Aviso</string>
+    <string name="cancel">Cancelar</string>
+    <string name="quit_message">Tem certeza que deseja sair?</string>
+    <string name="location_search_timeout">Não foi possível capturar a sua posição. Gostaria de usar sua última posição conhecida? Atenção: sua última posição conhecida pode ser menos precisa do que a capturada neste instante.</string>
+    <string name="invalid_position">Não foi possível determinar uma posição válida. Por favor, verifique a sua conexão GPS e Internet e tente novamente.</string>
 </resources>
