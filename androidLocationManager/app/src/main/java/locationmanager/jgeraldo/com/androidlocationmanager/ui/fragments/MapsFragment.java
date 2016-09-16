@@ -2,6 +2,7 @@ package locationmanager.jgeraldo.com.androidlocationmanager.ui.fragments;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -31,6 +32,7 @@ import io.github.yavski.fabspeeddial.SimpleMenuListenerAdapter;
 import locationmanager.jgeraldo.com.androidlocationmanager.R;
 import locationmanager.jgeraldo.com.androidlocationmanager.entities.GPSCountDownTimeout;
 import locationmanager.jgeraldo.com.androidlocationmanager.entities.MyLocationManager;
+import locationmanager.jgeraldo.com.androidlocationmanager.storage.Preferences;
 import locationmanager.jgeraldo.com.androidlocationmanager.utils.Constants;
 import locationmanager.jgeraldo.com.androidlocationmanager.utils.Util;
 
@@ -95,6 +97,13 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
         return view;
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+
+        Util.onRequestPermissionsResult(mActivity, mContext, requestCode, grantResults);
+    }
+
     private void setViews() {
         mFabAdd = (FabSpeedDial) view.findViewById(R.id.fab_map);
         mFabAdd.setMenuListener(new SimpleMenuListenerAdapter() {
@@ -103,13 +112,16 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
                 int itemId = menuItem.getItemId();
 
                 if (itemId == R.id.ic_save_current_location) {
-                    Snackbar.make(mActivity.findViewById(android.R.id.content), "Location: "
-                            + currentMarkerLocation.latitude
-                            + "; " + currentMarkerLocation.longitude,
-                            Snackbar.LENGTH_SHORT).setAction("Action", null).show();
+                    Util.showSnackBar(mActivity, "Location: "
+                        + currentMarkerLocation.latitude
+                        + "; " + currentMarkerLocation.longitude);
                     return true;
                 } else if (itemId == R.id.ic_goto_my_position) {
-                    new GetCurrentCoordinates().execute();
+                    if (!Preferences.getLocationPermissionsGrantFlag(mContext)) {
+                        Util.checkLocationPermissions(mActivity);
+                    } else {
+                        new GetCurrentCoordinates().execute();
+                    }
                     return true;
                 }
                 return false;
@@ -122,15 +134,15 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
         mapFragment.getMapAsync(this);
     }
 
-    private void updateMapPosition(){
+    private void updateMapPosition() {
         if (currentMarker != null) {
             currentMarker.remove();
         }
 
         currentMarkerOptions = new MarkerOptions()
-                .position(currentMarkerLocation)
-                .title(Util.getString(mContext, R.string.current_location))
-                .icon(myLocation);
+            .position(currentMarkerLocation)
+            .title(Util.getString(mContext, R.string.current_location))
+            .icon(myLocation);
         currentMarker = mMap.addMarker(currentMarkerOptions);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentMarkerLocation, Constants.DEFAULT_MAP_ZOOM));
     }
@@ -201,13 +213,19 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
 
     private class GetCurrentCoordinates extends AsyncTask<Void, Void, Void> {
 
-        /** The progress dialog. */
+        /**
+         * The progress dialog.
+         */
         private ProgressDialog progressDialog;
 
-        /** The progress message. */
+        /**
+         * The progress message.
+         */
         private final String progressMessage = Util.getString(mContext, R.string.getting_current_location);
 
-        /** The m timeout. */
+        /**
+         * The m timeout.
+         */
         private GPSCountDownTimeout mTimeout;
 
         /*
@@ -222,8 +240,8 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
             progressDialog.setMessage(progressMessage);
             progressDialog.show();
             mTimeout = new GPSCountDownTimeout(mContext, this, progressDialog,
-                    progressMessage, MyLocationManager.GPS_TIMEOUT,
-                    MyLocationManager.GPS_TIMEOUT_INTERVAL, true);
+                progressMessage, MyLocationManager.GPS_TIMEOUT,
+                MyLocationManager.GPS_TIMEOUT_INTERVAL, true);
             mTimeout.start();
         }
 
@@ -237,15 +255,15 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
             if (mLocationManager.isGPSEnable()) {
                 Log.e("CAPTURE", "BY BOTH");
                 while (MyLocationManager.isLocationInvalid(
-                        mLocationManager.getSatelliteLocation())
-                        && !mLocationManager.isTimeoutFinished() && !isCancelled()) {
+                    mLocationManager.getSatelliteLocation())
+                    && !mLocationManager.isTimeoutFinished() && !isCancelled()) {
                     Log.i("Location", "SEARCHING LOCATION");
                 }
             } else {
                 Log.e("CAPTURE", "BY NETWORK");
                 while (MyLocationManager
-                        .isLocationInvalid(mLocationManager.getNetworkLocation())
-                        && !mLocationManager.isTimeoutFinished() && !isCancelled()) {
+                    .isLocationInvalid(mLocationManager.getNetworkLocation())
+                    && !mLocationManager.isTimeoutFinished() && !isCancelled()) {
                     Log.i("Location", "SEARCHING LOCATION");
                 }
             }
@@ -273,12 +291,12 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
             Location betterLocation = mLocationManager.getBetterLocation();
 
             if (MyLocationManager
-                    .isLocationInvalid(mLocationManager.getSatelliteLocation())) {
+                .isLocationInvalid(mLocationManager.getSatelliteLocation())) {
                 if (MyLocationManager
-                        .isLocationInvalid(mLocationManager.getNetworkLocation())) {
+                    .isLocationInvalid(mLocationManager.getNetworkLocation())) {
                     Location lastKnowLoc = mLocationManager.getLastKnownLocation();
                     if (MyLocationManager
-                            .isLocationInvalid(lastKnowLoc)) {
+                        .isLocationInvalid(lastKnowLoc)) {
                         mActivity.runOnUiThread(new Runnable() {
                             public void run() {
 //                                dialogGPSConnection();

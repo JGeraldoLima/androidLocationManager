@@ -95,19 +95,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case Constants.LOCATION_PERMISSIONS_CODE: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Preferences.setLocationPermissionsGrantFlag(mContext, true);
-                    mLocationManager.checkLocationServicesStatus();
-                } else {
-
-                }
-                return;
-            }
-        }
+        Util.onRequestPermissionsResult(mActivity, mContext, requestCode, grantResults);
     }
 
     private void setHomeWatcher() {

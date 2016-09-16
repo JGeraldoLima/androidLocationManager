@@ -13,4 +13,5 @@
     <string name="default_location">Marcador em Campina Grande - PB, BR</string>
     <string name="getting_current_location">Calculando suas coordenadas atuais . . .</string>
     <string name="nav_about">Sobre o desenvolvedor</string>
+    <string name="locations_permission_denied_msg">Não será possível utilizar os Serviços de Localização até que você conceda esta permissão.</string>
 </resources>

@@ -3,12 +3,16 @@ package locationmanager.jgeraldo.com.androidlocationmanager.utils;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.os.AsyncTask;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
+import android.view.View;
+import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -25,6 +29,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Locale;
 
+import locationmanager.jgeraldo.com.androidlocationmanager.R;
 import locationmanager.jgeraldo.com.androidlocationmanager.entities.MyLocation;
 import locationmanager.jgeraldo.com.androidlocationmanager.entities.MyLocationManager;
 import locationmanager.jgeraldo.com.androidlocationmanager.storage.Database;
@@ -72,6 +77,33 @@ public final class Util {
                     Manifest.permission.ACCESS_COARSE_LOCATION},
                 Constants.LOCATION_PERMISSIONS_CODE);
         }
+    }
+
+    public static void onRequestPermissionsResult(Activity mActivity, Context mContext, int requestCode, int[] grantResults) {
+        switch (requestCode) {
+            case Constants.LOCATION_PERMISSIONS_CODE: {
+                if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Preferences.setLocationPermissionsGrantFlag(mContext, true);
+                    gpsManager.checkLocationServicesStatus();
+                } else {
+                    showSnackBar(mActivity, getString(mContext, R.string.locations_permission_denied_msg));
+                }
+                break;
+            }
+        }
+    }
+
+    public static void showSnackBar(Activity activity, String msgToshow) {
+        Snackbar snackbar = Snackbar.make(activity.findViewById(android.R.id.content), msgToshow, Snackbar.LENGTH_LONG)
+            .setAction("Action", null);
+
+        View sbView = snackbar.getView();
+        TextView textView = (TextView) sbView.findViewById(android.support.design.R.id.snackbar_text);
+        textView.setTextColor(activity.getResources().getColor(android.R.color.white));
+        textView.setMaxLines(4);
+
+        snackbar.show();
     }
 
     public static boolean isConnected(final Context context) {
