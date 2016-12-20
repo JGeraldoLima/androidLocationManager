@@ -9,7 +9,7 @@ import android.util.Log;
 
 import locationmanager.jgeraldo.com.androidlocationmanager.utils.Util;
 
-public class GPSCountDownTimeout extends CountDownTimer {
+public class LocationSearchTimer extends CountDownTimer {
 
     private static final int LONG_DIVISOR = 1000;
 
@@ -23,11 +23,11 @@ public class GPSCountDownTimeout extends CountDownTimer {
 
     private final boolean mCancelTask;
 
-    public GPSCountDownTimeout(final Context context,
-            final AsyncTask<Void, Void, Void> task,
-            final ProgressDialog progressDialog, final String message,
-            final long millisInFuture, final long countDownInterval,
-            final boolean cancelCurrentTask) {
+    public LocationSearchTimer(final Context context,
+                               final AsyncTask<Void, Void, Void> task,
+                               final ProgressDialog progressDialog, final String message,
+                               final long millisInFuture, final long countDownInterval,
+                               final boolean cancelCurrentTask) {
         super(millisInFuture, countDownInterval);
         mTask = task;
         mProgress = progressDialog;
@@ -43,20 +43,20 @@ public class GPSCountDownTimeout extends CountDownTimer {
     public final void onTick(final long millisUntilFinished) {
         Location tempSatLocation = gpsManager.getSatelliteLocation();
         Location tempNetLocation = gpsManager.getNetworkLocation();
-        Log.i("COORDENADAS ATUAIS NET",
-                "Latitude: " + tempNetLocation.getLatitude()
-                        + "; Longitude: "
-                        + tempNetLocation.getLongitude());
+        Log.i("CURRENT NETWORK COORDINATES",
+            "Latitude: " + tempNetLocation.getLatitude()
+                + "; Longitude: "
+                + tempNetLocation.getLongitude());
         Log.i("COORDENADAS ATUAIS GPS",
-                "Latitude: "
-                        + tempSatLocation.getLatitude()
-                        + "; Longitude: "
-                        + tempSatLocation.getLongitude());
+            "Latitude: "
+                + tempSatLocation.getLatitude()
+                + "; Longitude: "
+                + tempSatLocation.getLongitude());
         mProgress.setMessage(progressMessage + " "
-                + (millisUntilFinished / LONG_DIVISOR) + "s");
+            + (millisUntilFinished / LONG_DIVISOR) + "s");
 
         if (!mProgress.isShowing()) {
-            gpsManager.setTimeoutFinished(true);
+            gpsManager.setTimeoutState(true);
             MyLocationManager.setGPSUpdatingStatus(false);
             if (mCancelTask) {
                 this.cancel();
@@ -64,8 +64,8 @@ public class GPSCountDownTimeout extends CountDownTimer {
         }
 
         if (!MyLocationManager
-                .isLocationInvalid(tempSatLocation)) {
-            gpsManager.setTimeoutFinished(true);
+            .isLocationInvalid(tempSatLocation)) {
+            gpsManager.setTimeoutState(true);
             MyLocationManager.setGPSUpdatingStatus(false);
             if (mCancelTask) {
                 this.cancel();
@@ -80,7 +80,7 @@ public class GPSCountDownTimeout extends CountDownTimer {
     @Override
     public final void onFinish() {
         mProgress.cancel();
-        gpsManager.setTimeoutFinished(true);
+        gpsManager.setTimeoutState(true);
         if (mCancelTask) {
             mTask.cancel(true);
             this.cancel();
