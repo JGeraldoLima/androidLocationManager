@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/ic_change_map_to_satellite"
+        android:icon="@mipmap/ic_maps_satellite"
+        android:title="@string/map_satellite_type"/>
+    <item
+        android:id="@+id/ic_change_map_to_terrain"
+        android:icon="@mipmap/ic_maps_terrain"
+        android:title="@string/map_terrain_type" />
+    <item
+        android:id="@+id/ic_change_map_to_normal"
+        android:icon="@mipmap/ic_map"
+        android:title="@string/map_normal_type" />
+</menu>

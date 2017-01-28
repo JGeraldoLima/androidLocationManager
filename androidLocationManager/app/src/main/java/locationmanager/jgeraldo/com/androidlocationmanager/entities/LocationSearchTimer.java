@@ -13,7 +13,7 @@ public class LocationSearchTimer extends CountDownTimer {
 
     private static final int LONG_DIVISOR = 1000;
 
-    private final MyLocationManager gpsManager = Util.getLocationManager();
+    private final MyLocationManager myLocationManager = Util.getLocationManager();
 
     private final AsyncTask<Void, Void, Void> mTask;
 
@@ -41,13 +41,14 @@ public class LocationSearchTimer extends CountDownTimer {
      */
     @Override
     public final void onTick(final long millisUntilFinished) {
-        Location tempSatLocation = gpsManager.getSatelliteLocation();
-        Location tempNetLocation = gpsManager.getNetworkLocation();
+        Location tempSatLocation = myLocationManager.getSatelliteLocation();
+        Location tempNetLocation = myLocationManager.getNetworkLocation();
         Log.i("CURRENT NETWORK COORDINATES",
-            "Latitude: " + tempNetLocation.getLatitude()
+            "Latitude: "
+                + tempNetLocation.getLatitude()
                 + "; Longitude: "
                 + tempNetLocation.getLongitude());
-        Log.i("COORDENADAS ATUAIS GPS",
+        Log.i("CURRENT GPS COORDINATES",
             "Latitude: "
                 + tempSatLocation.getLatitude()
                 + "; Longitude: "
@@ -56,8 +57,8 @@ public class LocationSearchTimer extends CountDownTimer {
             + (millisUntilFinished / LONG_DIVISOR) + "s");
 
         if (!mProgress.isShowing()) {
-            gpsManager.setTimeoutState(true);
-            MyLocationManager.setGPSUpdatingStatus(false);
+            myLocationManager.setTimerState(true);
+            myLocationManager.setGPSUpdatingState(false);
             if (mCancelTask) {
                 this.cancel();
             }
@@ -65,8 +66,8 @@ public class LocationSearchTimer extends CountDownTimer {
 
         if (!MyLocationManager
             .isLocationInvalid(tempSatLocation)) {
-            gpsManager.setTimeoutState(true);
-            MyLocationManager.setGPSUpdatingStatus(false);
+            myLocationManager.setTimerState(true);
+            myLocationManager.setGPSUpdatingState(false);
             if (mCancelTask) {
                 this.cancel();
             }
@@ -80,7 +81,7 @@ public class LocationSearchTimer extends CountDownTimer {
     @Override
     public final void onFinish() {
         mProgress.cancel();
-        gpsManager.setTimeoutState(true);
+        myLocationManager.setTimerState(true);
         if (mCancelTask) {
             mTask.cancel(true);
             this.cancel();

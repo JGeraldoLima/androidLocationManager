@@ -18,6 +18,7 @@ import android.view.ViewGroup;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -25,31 +26,43 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import io.github.yavski.fabspeeddial.FabSpeedDial;
 import io.github.yavski.fabspeeddial.SimpleMenuListenerAdapter;
+import io.realm.Realm;
 import locationmanager.jgeraldo.com.androidlocationmanager.R;
-import locationmanager.jgeraldo.com.androidlocationmanager.entities.GPSCountDownTimeout;
+import locationmanager.jgeraldo.com.androidlocationmanager.entities.LocationSearchTimer;
+import locationmanager.jgeraldo.com.androidlocationmanager.entities.MyLocation;
 import locationmanager.jgeraldo.com.androidlocationmanager.entities.MyLocationManager;
+import locationmanager.jgeraldo.com.androidlocationmanager.storage.Database;
 import locationmanager.jgeraldo.com.androidlocationmanager.storage.Preferences;
+import locationmanager.jgeraldo.com.androidlocationmanager.storage.RealmUtil;
 import locationmanager.jgeraldo.com.androidlocationmanager.utils.Constants;
 import locationmanager.jgeraldo.com.androidlocationmanager.utils.Util;
 
 public class MapsFragment extends Fragment implements OnMapReadyCallback, GoogleMap.OnMapClickListener {
 
-    public static Context mContext;
+    public Context mContext;
 
-    private static FragmentActivity mActivity;
+    private FragmentActivity mActivity;
 
     private MyLocationManager mLocationManager;
 
-    private static Toolbar mToolbar;
+    private Database mDatabase;
+
+    private Toolbar mToolbar;
 
     private static FragmentManager mFragmentManager;
 
-    private static FabSpeedDial mFabAdd;
+    private FabSpeedDial mFabAdd;
+
+    private FabSpeedDial mFabTypes;
 
     private View view;
 
@@ -57,11 +70,15 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
 
     private Marker currentMarker;
 
+    private static ArrayList<Marker> mMarkers = new ArrayList<>();
+
     private MarkerOptions currentMarkerOptions;
 
-    private LatLng currentMarkerLocation = new LatLng(-7.2190974, -35.903685);
+    private LatLng currentMarkerLocation;
 
     private BitmapDescriptor myLocation;
+
+    private static LatLngBounds.Builder builder;
 
     public MapsFragment() {
         super();
@@ -77,6 +94,24 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
 
         mFragmentManager = getChildFragmentManager();
         mLocationManager = Util.getLocationManager();
+        mDatabase = Util.getDataBase(); // TODO: REMOVE
+
+        currentMarkerLocation = new LatLng(mLocationManager.getLatitude(), mLocationManager.getLongitude());
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mLocationManager != null) {
+            mLocationManager.checkLocationServicesStatus();
+
+            if (Preferences.getUserLatitudePos(mContext) == -1
+                && Preferences.getUserLongitudePos(mContext) == -1) {
+                new GetCurrentCoordinates().execute();
+            } else {
+                currentMarkerLocation = new LatLng(Preferences.getUserLatitudePos(mContext), Preferences.getUserLongitudePos(mContext));
+            }
+        }
     }
 
     @Override
@@ -98,22 +133,29 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
     }
 
     @Override
+    public void onDestroyView() {
+        if (mLocationManager != null) {
+            mLocationManager.stopUpdates(false);
+        }
+        RealmUtil.close();
+        super.onDestroyView();
+    }
+
+    @Override
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
         Util.onRequestPermissionsResult(mActivity, mContext, requestCode, grantResults);
     }
 
     private void setViews() {
-        mFabAdd = (FabSpeedDial) view.findViewById(R.id.fab_map);
+        mFabAdd = (FabSpeedDial) view.findViewById(R.id.fab_map_add_options);
         mFabAdd.setMenuListener(new SimpleMenuListenerAdapter() {
             @Override
             public boolean onMenuItemSelected(MenuItem menuItem) {
                 int itemId = menuItem.getItemId();
 
                 if (itemId == R.id.ic_save_current_location) {
-                    Util.showSnackBar(mActivity, "Location: "
-                        + currentMarkerLocation.latitude
-                        + "; " + currentMarkerLocation.longitude);
+                    openNewLocationNameChoosingDialog();
                     return true;
                 } else if (itemId == R.id.ic_goto_my_position) {
                     if (!Preferences.getLocationPermissionsGrantFlag(mContext)) {
@@ -126,6 +168,28 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
                 return false;
             }
         });
+
+        mFabTypes = (FabSpeedDial) view.findViewById(R.id.fab_map_type_options);
+        mFabTypes.setMenuListener(new SimpleMenuListenerAdapter() {
+            @Override
+            public boolean onMenuItemSelected(MenuItem menuItem) {
+                int itemId = menuItem.getItemId();
+
+                int map_type;
+
+                if (itemId == R.id.ic_change_map_to_normal) {
+                    map_type = GoogleMap.MAP_TYPE_NORMAL;
+                } else if (itemId == R.id.ic_change_map_to_terrain) {
+                    map_type = GoogleMap.MAP_TYPE_TERRAIN;
+                } else {
+                    map_type = GoogleMap.MAP_TYPE_SATELLITE;
+                }
+
+                mMap.setMapType(map_type);
+                return true;
+            }
+        });
+
     }
 
     private void setUpMap() {
@@ -138,6 +202,8 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
             currentMarker.remove();
         }
 
+        Preferences.setUserLatitudePos(mContext, currentMarkerLocation.latitude);
+        Preferences.setUserLongitudePos(mContext, currentMarkerLocation.longitude);
         currentMarkerOptions = new MarkerOptions()
             .position(currentMarkerLocation)
             .title(Util.getString(mContext, R.string.current_location))
@@ -149,20 +215,93 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
     @Override
     public void onMapReady(GoogleMap googleMap) {
         myLocation = BitmapDescriptorFactory.fromResource(R.mipmap.ic_my_location);
+        // TODO: change it to get live GPS position instead
         currentMarkerOptions = new MarkerOptions().position(currentMarkerLocation).title(Util.getString(mContext, R.string.default_location)).icon(myLocation);
 
         mMap = googleMap;
-
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         mMap.setOnMapClickListener(this);
-        currentMarker = mMap.addMarker(currentMarkerOptions);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentMarkerLocation, Constants.DEFAULT_MAP_ZOOM));
+
+        builder = new LatLngBounds.Builder();
+        builder.include(currentMarkerLocation);
+
+        if (currentMarkerLocation != null) {
+            currentMarkerOptions = new MarkerOptions().position(currentMarkerLocation).title(Util.getString(mContext, R.string.current_location)).icon(myLocation);
+            currentMarker = mMap.addMarker(currentMarkerOptions);
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentMarkerLocation, Constants.DEFAULT_MAP_ZOOM));
+        }
+
+        loadDatabaseLocationsOnMap();
     }
 
     @Override
     public void onMapClick(LatLng point) {
         currentMarkerLocation = point;
         updateMapPosition();
+    }
+
+    private void loadDatabaseLocationsOnMap() {
+        // REMOVE ALL POINTS BEFORE CONTINUE?
+        List<MyLocation> storedLocations = mDatabase.getAllLocations("");
+        for (MyLocation l : storedLocations) {
+            BitmapDescriptor renterLocationBitmap = BitmapDescriptorFactory.fromResource(R.mipmap.ic_map_location);
+            createRenterMarkerOnMap(renterLocationBitmap, l);
+        }
+
+        try {
+            updateMapCameraZoom();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void updateMapCameraZoom() {
+        final LatLngBounds bounds = builder.build();
+        final CameraUpdate camUp = CameraUpdateFactory.newLatLngBounds(
+            bounds, 80);
+        mMap.animateCamera(camUp);
+    }
+
+    private void createRenterMarkerOnMap(BitmapDescriptor markerIcon, MyLocation location) {
+        Marker marker = mMap.addMarker(new MarkerOptions()
+            .position(new LatLng(location.getLatitude(), location.getLongitude()))
+            .title(location.getName()).icon(markerIcon));
+        addMarkerToMap(marker);
+    }
+
+    private void addMarkerToMap(Marker marker) {
+        // TODO: verify a better way to do this check
+        if (mMarkers.contains(marker)) {
+            mMarkers.remove(marker);
+        }
+        mMarkers.add(marker);
+
+        builder = new LatLngBounds.Builder();
+        builder.include(currentMarkerLocation);
+
+        for (Marker mark : mMarkers) {
+            builder.include(mark.getPosition());
+        }
+
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                if (currentMarker.equals(marker)) {
+                    currentMarker.showInfoWindow();
+                } else {
+                    for (int i = 0; i < mMarkers.size(); i++) {
+                        if (mMarkers.get(i).equals(marker)) {
+                            marker.showInfoWindow();
+//                            openItemOptionsBottomDialog(mRenters.get(i), marker);
+                            break;
+                        }
+                    }
+                }
+                return true;
+            }
+
+        });
     }
 
     public void openLocationConnectionTimeout() {
@@ -190,7 +329,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
             .onNegative(new MaterialDialog.SingleButtonCallback() {
                 @Override
                 public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                    mLocationManager.setTimeoutFinished(false);
+                    mLocationManager.setTimerState(false);
                     dialog.dismiss();
                 }
             });
@@ -199,22 +338,56 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
         alertDialog.show();
     }
 
+    private void openNewLocationNameChoosingDialog() {
+        final MaterialDialog.Builder builder = new MaterialDialog.Builder(mActivity)
+            .title(R.string.newlocation_name_choosing_dialog_title)
+            .content(R.string.newlocation_name_choosing_dialog_content)
+            .positiveText(R.string.save)
+            .onPositive(new MaterialDialog.SingleButtonCallback() {
+                @Override
+                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    // If flow is passing here, it means that the Save button is unlocked
+                    // and there are no errors.
+                    String name = dialog.getInputEditText().getText().toString();
+                    MyLocation location = new MyLocation(name,
+                        currentMarkerLocation.latitude, currentMarkerLocation.longitude);
+                    mDatabase.addLocation(mActivity, location);
+                    loadDatabaseLocationsOnMap();
+                }
+            })
+            .negativeText(R.string.cancel)
+            .onNegative(new MaterialDialog.SingleButtonCallback() {
+                @Override
+                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    dialog.dismiss();
+                }
+            })
+            .alwaysCallInputCallback()
+            .input(R.string.newlocation_name_choosing_dialog_hint, 0, false,
+                new MaterialDialog.InputCallback() {
+                    @Override
+                    public void onInput(MaterialDialog dialog, CharSequence input) {
+                        String name = input.toString();
+                        if (mDatabase.locationNameAlreadyExists(name)) {
+                            dialog.getInputEditText().setError(Util.getString(mContext, R.string.newlocation_existing_name_error));
+                            dialog.getActionButton(DialogAction.POSITIVE).setEnabled(false);
+                        } else {
+                            dialog.getActionButton(DialogAction.POSITIVE).setEnabled(true);
+                        }
+                    }
+                });
+
+        MaterialDialog alertDialog = builder.build();
+        alertDialog.show();
+    }
+
     private class GetCurrentCoordinates extends AsyncTask<Void, Void, Void> {
 
-        /**
-         * The progress dialog.
-         */
         private ProgressDialog progressDialog;
 
-        /**
-         * The progress message.
-         */
         private final String progressMessage = Util.getString(mContext, R.string.getting_current_location);
 
-        /**
-         * The m timeout.
-         */
-        private GPSCountDownTimeout mTimeout;
+        private LocationSearchTimer mTimeout;
 
         /*
          * (non-Javadoc)
@@ -227,9 +400,9 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
             progressDialog.setCancelable(true);
             progressDialog.setMessage(progressMessage);
             progressDialog.show();
-            mTimeout = new GPSCountDownTimeout(mContext, this, progressDialog,
-                progressMessage, MyLocationManager.GPS_TIMEOUT,
-                MyLocationManager.GPS_TIMEOUT_INTERVAL, true);
+            mTimeout = new LocationSearchTimer(mContext, this, progressDialog,
+                progressMessage, MyLocationManager.TIMER_TIMEOUT,
+                MyLocationManager.TIMER_TIMEOUT_INTERVAL, true);
             mTimeout.start();
         }
 
@@ -244,14 +417,14 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
                 Log.e("CAPTURE", "BY BOTH");
                 while (MyLocationManager.isLocationInvalid(
                     mLocationManager.getSatelliteLocation())
-                    && !mLocationManager.isTimeoutFinished() && !isCancelled()) {
+                    && !mLocationManager.getTimerState() && !isCancelled()) {
                     Log.i("Location", "SEARCHING LOCATION");
                 }
             } else {
                 Log.e("CAPTURE", "BY NETWORK");
                 while (MyLocationManager
                     .isLocationInvalid(mLocationManager.getNetworkLocation())
-                    && !mLocationManager.isTimeoutFinished() && !isCancelled()) {
+                    && !mLocationManager.getTimerState() && !isCancelled()) {
                     Log.i("Location", "SEARCHING LOCATION");
                 }
             }
@@ -313,7 +486,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
         @Override
         protected void onCancelled() {
             mTimeout.cancel();
-            mLocationManager.setTimeoutFinished(false);
+            mLocationManager.setTimerState(false);
 
             try {
                 progressDialog.dismiss();
@@ -335,7 +508,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
         @Override
         protected void onCancelled(final Void result) {
             mTimeout.cancel();
-            mLocationManager.setTimeoutFinished(false);
+            mLocationManager.setTimerState(false);
             mActivity.runOnUiThread(new Runnable() {
                 public void run() {
                     openLocationConnectionTimeout();

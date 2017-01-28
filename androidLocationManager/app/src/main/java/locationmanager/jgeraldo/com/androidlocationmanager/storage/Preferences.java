@@ -4,7 +4,9 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import locationmanager.jgeraldo.com.androidlocationmanager.R;
 import locationmanager.jgeraldo.com.androidlocationmanager.utils.Constants;
+import locationmanager.jgeraldo.com.androidlocationmanager.utils.Util;
 
 @SuppressLint("CommitPrefEdits")
 public class Preferences {
@@ -31,9 +33,35 @@ public class Preferences {
         return loggedUserPreferences.getBoolean(Constants.LOCATION_PERMISSIONS_FLAG, false);
     }
 
+    public static Double getUserLatitudePos(Context context) {
+        initiatePreferencesIfNull(context);
+        String userLatitudePos = Util.getString(context, R.string.latitude_pos);
+        return Double.parseDouble(loggedUserPreferences.getFloat(userLatitudePos, -1F) + "");
+    }
+
+    public static Double getUserLongitudePos(Context context) {
+        initiatePreferencesIfNull(context);
+        String userLongitudePos = Util.getString(context, R.string.longitude_pos);
+        return Double.parseDouble(loggedUserPreferences.getFloat(userLongitudePos, -1F) + "");
+    }
+
     public static void setLocationPermissionsGrantFlag(Context context, boolean granted) {
         initiatePreferencesIfNull(context);
         loggedUserPreferenvesEditor.putBoolean(Constants.LOCATION_PERMISSIONS_FLAG, granted);
+        saveChanges();
+    }
+
+    public static void setUserLatitudePos(Context context, double latitude) {
+        initiatePreferencesIfNull(context);
+        String userLatitudePos = Util.getString(context, R.string.latitude_pos);
+        loggedUserPreferenvesEditor.putFloat(userLatitudePos, (float) latitude);
+        saveChanges();
+    }
+
+    public static void setUserLongitudePos(Context context, double longitude) {
+        initiatePreferencesIfNull(context);
+        String userLongitudePos = Util.getString(context, R.string.longitude_pos);
+        loggedUserPreferenvesEditor.putFloat(userLongitudePos, (float) longitude);
         saveChanges();
     }
 }

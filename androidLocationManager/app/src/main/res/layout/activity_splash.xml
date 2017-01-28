@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="alugasecadeirasdepraia.jgeraldo.alugasecadeirasdepraia.activities.SplashActivity"
+    tools:context="locationmanager.jgeraldo.com.androidlocationmanager.activities.SplashActivity"
     android:background="@drawable/side_nav_bar" >
 
     <ImageView

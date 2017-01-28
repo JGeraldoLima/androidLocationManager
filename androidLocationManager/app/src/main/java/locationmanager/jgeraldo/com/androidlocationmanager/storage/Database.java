@@ -1,5 +1,6 @@
 package locationmanager.jgeraldo.com.androidlocationmanager.storage;
 
+import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -11,7 +12,9 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
+import locationmanager.jgeraldo.com.androidlocationmanager.R;
 import locationmanager.jgeraldo.com.androidlocationmanager.entities.MyLocation;
+import locationmanager.jgeraldo.com.androidlocationmanager.utils.Util;
 
 public final class Database {
 
@@ -29,12 +32,12 @@ public final class Database {
 
 
     private static final String CREATE_TABLE_LOCATIONS = "CREATE TABLE "
-            + TABLE_LOCATIONS + "  (" +
-            COLUMN_ID + " INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "
-            + COLUMN_NAME + " TEXT NOT NULL UNIQUE,"
-            + COLUMN_LATITUDE + " REAL NOT NULL,"
-            + COLUMN_LONGITUDE + " REAL NOT NULL,"
-            + COLUMN_ALTITUDE + " REAL NOT NULL);";
+        + TABLE_LOCATIONS + "  (" +
+        COLUMN_ID + " INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "
+        + COLUMN_NAME + " TEXT NOT NULL UNIQUE,"
+        + COLUMN_LATITUDE + " REAL NOT NULL,"
+        + COLUMN_LONGITUDE + " REAL NOT NULL,"
+        + COLUMN_ALTITUDE + " REAL NOT NULL);";
 
     private static final String TAG = "Database";
 
@@ -87,7 +90,7 @@ public final class Database {
         public void onUpgrade(final SQLiteDatabase db, final int oldVersion,
                               final int newVersion) {
             Log.w(TAG, "Updating database from version " + oldVersion + " to "
-                    + newVersion + ", all data will be lost!");
+                + newVersion + ", all data will be lost!");
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_LOCATIONS);
             onCreate(db);
         }
@@ -121,7 +124,7 @@ public final class Database {
         mDb.close();
     }
 
-    public void addLocation(final MyLocation location) {
+    public void addLocation(final Activity activity, final MyLocation location) {
 
         final ContentValues values = new ContentValues();
 
@@ -134,13 +137,23 @@ public final class Database {
             mDb.beginTransaction();
             mDb.insert(TABLE_LOCATIONS, null, values);
             mDb.setTransactionSuccessful();
+            Util.showSnackBar(activity, location.getName() + " "
+                + Util.getString(mContext, R.string.newlocation_saved_successfully));
         } catch (Exception e) {
             Log.e("DB", "EXCEPTION: " + e.getMessage());
+            //handle unique name e general exceptions
         } finally {
             mDb.endTransaction();
         }
 
 
+        List<MyLocation> locations = getAllLocations("");
+
+        //        TODO REMOVE
+        for (int i = 0; i < locations.size(); i++) {
+            Log.d("LOCATIONS", "Latitude: " + locations.get(i).getLatitude() + "; KEY: " + locations.get(i).getKey());
+        }
+        //        TODO REMOVE
     }
 
     public void editLocation(final MyLocation location) {
@@ -156,9 +169,9 @@ public final class Database {
 
     public void removeLocation(final MyLocation location) {
         mDb.delete(TABLE_LOCATIONS, COLUMN_ID + "=?",
-                new String[]{
-                        String.valueOf(location.getKey())
-                });
+            new String[]{
+                String.valueOf(location.getKey())
+            });
     }
 
     public List<MyLocation> getAllLocations(final String filterName) {
@@ -198,8 +211,9 @@ public final class Database {
                         .equals(filterName
                             .toLowerCase(java.util.Locale
                                 .getDefault()))) {
-                        mLocation = new MyLocation(locationID, locationName, locationLatitude,
+                        mLocation = new MyLocation(locationName, locationLatitude,
                             locationLongitude);
+                        mLocation.setKey(locationID);
                         mLocation.setAltitude(locationAltitude);
                         mList.add(mLocation);
                     }
@@ -215,20 +229,20 @@ public final class Database {
         return mList;
     }
 
-    public boolean verifyNameAvailabiality(final String newName) {
+    public boolean locationNameAlreadyExists(final String newName) {
         String locationName;
         try {
             final Cursor mCursor = mDb.query(true, TABLE_LOCATIONS,
-                    new String[]{
-                            COLUMN_NAME
-                    }, null, null, null, null, null,
-                    null);
+                new String[]{
+                    COLUMN_NAME
+                }, null, null, null, null, null,
+                null);
 
             if (mCursor != null) {
                 mCursor.moveToFirst();
                 while (!mCursor.isAfterLast()) {
                     locationName = mCursor.getString(mCursor
-                            .getColumnIndex(COLUMN_NAME));
+                        .getColumnIndex(COLUMN_NAME));
                     if (locationName.equals(newName)) {
                         return true;
                     }

@@ -5,11 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 
-import alugasecadeirasdepraia.jgeraldo.com.alugasecadeirasdepraia.R;
-import alugasecadeirasdepraia.jgeraldo.com.alugasecadeirasdepraia.entities.User;
-import alugasecadeirasdepraia.jgeraldo.com.alugasecadeirasdepraia.utils.Util;
+import locationmanager.jgeraldo.com.androidlocationmanager.R;
 
 public class SplashActivity extends Activity {
 
@@ -35,15 +32,15 @@ public class SplashActivity extends Activity {
             @Override
             public void run() {
                 Intent i = null;
-                User loggedUser = Util.getLoggedUser(mContext);
-
-                if (loggedUser == null || loggedUser.getName().equals(Util.getString(mContext, R.string.user_name))) {
-                    i = new Intent(SplashActivity.this,
-                            LoginActivity.class);
-                } else {
+//                User loggedUser = Util.getLoggedUser(mContext);
+//
+//                if (loggedUser == null || loggedUser.getName().equals(Util.getString(mContext, R.string.user_name))) {
+//                    i = new Intent(SplashActivity.this,
+//                            LoginActivity.class);
+//                } else {
                     i = new Intent(SplashActivity.this,
                             MainActivity.class);
-                }
+//                }
                 startActivity(i);
                 finish();
             }

@@ -1,19 +1,27 @@
 package locationmanager.jgeraldo.com.androidlocationmanager.entities;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.view.View;
+import android.view.Window;
+import android.widget.Button;
+import android.widget.TextView;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
+import locationmanager.jgeraldo.com.androidlocationmanager.R;
 import locationmanager.jgeraldo.com.androidlocationmanager.listeners.NetworkLocationListener;
 import locationmanager.jgeraldo.com.androidlocationmanager.listeners.SatelliteLocationListener;
 import locationmanager.jgeraldo.com.androidlocationmanager.storage.Preferences;
+import locationmanager.jgeraldo.com.androidlocationmanager.utils.Util;
 
 public final class MyLocationManager {
 
@@ -33,44 +41,75 @@ public final class MyLocationManager {
 
     private static Location mNetworkLocation;
 
-    private static GoogleApiClient mLocationClient;
+    private static GoogleApiClient mGoogleClient;
 
     private LocationRequest mLocationRequest;
 
+    /** the request time interval in milliseconds. The LocationManager will ask for
+     * new updates every LOCATION_REQUEST_INTERVAL ms
+     * **/
     private static final int LOCATION_REQUEST_INTERVAL = 1000;
 
-    private static boolean mGPSUpdaterState;
+    /**
+     * the GPS sattelite updating state to control whether start GPS updates.
+     * If it is already receiving updates, there is no need to ask again for it.
+     **/
+    private static boolean mGPSUpdatingState;
 
-    private static boolean mNetworkUpdaterState;
+    /**
+     * the network updating state to control whether start network updates.
+     * If it is already receiving updates, there is no need to connect the client
+     * and ask again for it.
+     **/
+    private static boolean mNetworkUpdatingState;
 
+    /**
+     * the minTime flag used by LocationManager's requestLocationUpdates method
+     **/
     private static final long LOCATION_MANAGER_MIN_TIME = 10;
 
-    private static final float LOCATION_MANAGER_MIN_ACCURACY = 5;
-
-    private static final float LOCATION_MANAGER_MAX_ACCURACY = 20;
-
+    /**
+     * the minDistance flag used by LocationManager's requestLocationUpdates method
+     **/
     private static final float LOCATION_MANAGER_MIN_DISTANCE = 0;
 
-    public static final int GPS_TIMEOUT = 60000;
+    /**
+     * the minimum accuracy considered for a valid position
+     **/
+    private static final float LOCATION_MANAGER_MIN_ACCURACY = 5;
 
-    public static final int GPS_TIMEOUT_INTERVAL = 1000;
+    /**
+     * the maximum accuracy considered for a valid position
+     **/
+    private static final float LOCATION_MANAGER_MAX_ACCURACY = 20;
 
-    private boolean timeoutFinished;
+    /**
+     * Max limit time in milliseconds to wait for valid coordinates
+     **/
+    public static final int TIMER_TIMEOUT = 60000;
+
+    /**
+     * Timer tic-tac interval in milliseconds
+     **/
+    public static final int TIMER_TIMEOUT_INTERVAL = 1000;
+
+    /**
+     * Timer State flag to control it externally.
+     * This is necessary due some bugs on CountDownTimer
+     **/
+    private boolean timerState;
 
     public MyLocationManager(final Context context, final Activity activity) {
         mContext = context;
         mActivity = activity;
-        timeoutFinished = false;
+        timerState = false;
 
         mLocationManager = (LocationManager) mContext
-                .getSystemService(Context.LOCATION_SERVICE);
+            .getSystemService(Context.LOCATION_SERVICE);
 
         connectClient();
-
         setLocationListeners();
-
         instantiateLastKnowLocation();
-
         setLocationRequest();
     }
 
@@ -124,19 +163,19 @@ public final class MyLocationManager {
     public void setLastKnownLocation() {
         if (!Preferences.getLocationPermissionsGrantFlag(mContext)) return;
         Location lastKnownGPS = getBetterLocationAux(mLocationManager
-                .getLastKnownLocation(LocationManager.GPS_PROVIDER), mSatelliteLocation);
+            .getLastKnownLocation(LocationManager.GPS_PROVIDER), mSatelliteLocation);
         Location lastKnownNetwork = getBetterLocationAux(mLocationManager
-                        .getLastKnownLocation(LocationManager.NETWORK_PROVIDER),
-                mNetworkLocation);
+                .getLastKnownLocation(LocationManager.NETWORK_PROVIDER),
+            mNetworkLocation);
         if (lastKnownGPS != null && lastKnownNetwork != null) {
             setLastKnownLocation(getBetterLocationAux(lastKnownGPS,
-                    lastKnownNetwork));
+                lastKnownNetwork));
         } else if (lastKnownGPS != null) {
             setLastKnownLocation(getBetterLocationAux(lastKnownGPS,
-                    mLastKnownLocation));
+                mLastKnownLocation));
         } else if (lastKnownNetwork != null) {
             setLastKnownLocation(getBetterLocationAux(lastKnownNetwork,
-                    mLastKnownLocation));
+                mLastKnownLocation));
         }
     }
 
@@ -148,9 +187,9 @@ public final class MyLocationManager {
 
     public Location getBetterLocation() {
         Location locationA = getBetterLocationAux(mSatelliteLocation,
-                mNetworkLocation);
+            mNetworkLocation);
         Location locationB = getBetterLocationAux(mSatelliteLocation,
-                mLastKnownLocation);
+            mLastKnownLocation);
         Location tempLoc = getBetterLocationAux(locationA, locationB);
 
         if (!isLocationInvalid(tempLoc)) {
@@ -174,21 +213,21 @@ public final class MyLocationManager {
         if (isLocationInvalid(locationA) && isLocationInvalid(locationB)) {
             return null;
         } else if (isLocationInvalid(locationA)
-                && !isLocationInvalid(locationB)) {
+            && !isLocationInvalid(locationB)) {
             return locationB;
         } else if (!isLocationInvalid(locationA)
-                && isLocationInvalid(locationB)) {
+            && isLocationInvalid(locationB)) {
             return locationA;
         } else {
             long timeDelta = locationA.getTime() - locationB.getTime();
             boolean isNewer = timeDelta > 0;
 
             int accuracyDelta = (int) (locationA.getAccuracy() - locationB
-                    .getAccuracy());
+                .getAccuracy());
             boolean isLessAccurate = accuracyDelta > LOCATION_MANAGER_MIN_ACCURACY;
             boolean isMoreAccurate = accuracyDelta < LOCATION_MANAGER_MIN_ACCURACY;
             boolean isSignificantlyLessAccurate = accuracyDelta
-                    > LOCATION_MANAGER_MAX_ACCURACY;
+                > LOCATION_MANAGER_MAX_ACCURACY;
 
             if (isMoreAccurate) {
                 return locationA;
@@ -201,19 +240,19 @@ public final class MyLocationManager {
         }
     }
 
-    public void connectClient() {
-        if (mLocationClient == null) {
-            mLocationClient = new GoogleApiClient.Builder(mContext).addApi(
-                    LocationServices.API).build();
+    private void connectClient() {
+        if (mGoogleClient == null) {
+            mGoogleClient = new GoogleApiClient.Builder(mContext).addApi(
+                LocationServices.API).build();
         }
 
         if (isNetworkEnable()) {
-            mLocationClient.connect();
+            mGoogleClient.connect();
         }
     }
 
     public void disconnectClient() {
-        mLocationClient.disconnect();
+        mGoogleClient.disconnect();
     }
 
     public void checkLocationServicesStatus() {
@@ -231,16 +270,16 @@ public final class MyLocationManager {
         if (!Preferences.getLocationPermissionsGrantFlag(mContext)) return;
         if (useGPS) {
             mLocationManager.requestLocationUpdates(
-                    LocationManager.GPS_PROVIDER, LOCATION_MANAGER_MIN_TIME,
-                    LOCATION_MANAGER_MIN_DISTANCE, mSatteliteLocationListener);
-            setGPSUpdatingStatus(true);
+                LocationManager.GPS_PROVIDER, LOCATION_MANAGER_MIN_TIME,
+                LOCATION_MANAGER_MIN_DISTANCE, mSatteliteLocationListener);
+            setGPSUpdatingState(true);
         }
 
         if (useNetwork) {
             if (!isLocationClientConnected()) {
                 connectClient();
             }
-            setNetworkUpdatingStatus(true);
+            setNetworkUpdatingState(true);
             new NetworkConnection().execute();
         }
     }
@@ -248,13 +287,13 @@ public final class MyLocationManager {
     public void stopUpdates(final boolean clearData) {
         if (!Preferences.getLocationPermissionsGrantFlag(mContext)) return;
         mLocationManager.removeUpdates(mSatteliteLocationListener);
-        setGPSUpdatingStatus(false);
+        setGPSUpdatingState(false);
 
         if (isLocationClientConnected()) {
             LocationServices.FusedLocationApi.removeLocationUpdates(
-                    mLocationClient, mNetworkLocationListener);
+                mGoogleClient, mNetworkLocationListener);
             disconnectClient();
-            setNetworkUpdatingStatus(false);
+            setNetworkUpdatingState(false);
         }
 
         if (clearData) {
@@ -288,9 +327,9 @@ public final class MyLocationManager {
         mSatelliteLocation.setAltitude(altitude);
     }
 
-//    public void dialogPositionAccuracyWarning(final Activity activity,
-//                                              final Intent intentToStart, final AsyncTask<Void, Void, Void> task,
-//                                              final boolean finishActivity) {
+//    public void openLocationPrecisionConfigDialog(final Activity activity,
+//                                                  final Intent intentToStart, final AsyncTask<Void, Void, Void> task,
+//                                                  final boolean finishActivity) {
 //        final Dialog alertDialog = new Dialog(activity);
 //        alertDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
 //        alertDialog.setContentView(R.layout.dialog_sentence);
@@ -346,7 +385,7 @@ public final class MyLocationManager {
 //        alertDialog.show();
 //    }
 
-//    public void dialogLocationServices(final Activity activity) {
+//    public void openEnableLocationServicesDialog(final Activity activity) {
 //        final Dialog alertDialog = new Dialog(activity);
 //        alertDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
 //        alertDialog.setContentView(R.layout.dialog_sentence);
@@ -386,44 +425,13 @@ public final class MyLocationManager {
 //        alertDialog.show();
 //    }
 
-//    public void dialogInvalidPosition(final Context context, final Activity activity,
-//                                      final boolean finishActivity) {
-//        final Dialog alertDialog = new Dialog(activity);
-//        alertDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-//        alertDialog.setContentView(R.layout.dialog_warning);
-//
-//        TextView tvTitle = (TextView) alertDialog.findViewById(R.id.tvTitleDialogWarning);
-//        tvTitle.setText(Util
-//                .getString(context, R.string.invalidPositionTitle));
-//
-//        TextView tvMessage = (TextView) alertDialog.findViewById(R.id.tvMessageDialogWarning);
-//        tvMessage.setText(Util.getString(mActivity.getApplicationContext(),
-//                R.string.invalidPosition));
-//
-//        Button btOk = (Button) alertDialog.findViewById(R.id.btOkDialogWarning);
-//        btOk.setText(Util.getString(mContext, R.string.ok));
-//        btOk.setOnClickListener(new View.OnClickListener() {
-//
-//            @Override
-//            public void onClick(final View v) {
-//                setTimeoutFinished(false);
-//                if (finishActivity) {
-//                    activity.finish();
-//                }
-//                alertDialog.dismiss();
-//            }
-//        });
-//
-//        alertDialog.show();
-//    }
-
     public boolean isGPSEnable() {
         return mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
     }
 
     public boolean isNetworkEnable() {
         return mLocationManager
-                .isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+            .isProviderEnabled(LocationManager.NETWORK_PROVIDER);
     }
 
     public static boolean isLocationInvalid(final Location location) {
@@ -432,37 +440,37 @@ public final class MyLocationManager {
             return isNull;
         } else {
             final boolean isZero = location.getLatitude() == 0.0
-                    && location.getLongitude() == 0.0;
+                && location.getLongitude() == 0.0;
             return isNull || isZero;
         }
     }
 
-    public boolean isGPSLocationUpdating() {
-        return mGPSUpdaterState;
+    private boolean isGPSLocationUpdating() {
+        return mGPSUpdatingState;
     }
 
-    public boolean isNetworkLocationUpdating() {
-        return mNetworkUpdaterState;
+    private boolean isNetworkLocationUpdating() {
+        return mNetworkUpdatingState;
     }
 
-    public static void setGPSUpdatingStatus(final boolean state) {
-        mGPSUpdaterState = state;
+    void setGPSUpdatingState(final boolean state) {
+        mGPSUpdatingState = state;
     }
 
-    public static void setNetworkUpdatingStatus(final boolean state) {
-        mNetworkUpdaterState = state;
+    private void setNetworkUpdatingState(final boolean state) {
+        mNetworkUpdatingState = state;
     }
 
-    public boolean isTimeoutFinished() {
-        return timeoutFinished;
+    public boolean getTimerState() {
+        return timerState;
     }
 
-    public void setTimeoutFinished(final boolean state) {
-        timeoutFinished = state;
+    public void setTimerState(final boolean state) {
+        timerState = state;
     }
 
-    public static boolean isLocationClientConnected() {
-        return mLocationClient.isConnected();
+    private static boolean isLocationClientConnected() {
+        return mGoogleClient.isConnected();
     }
 
     private class NetworkConnection extends AsyncTask<Void, Void, Void> {
@@ -471,6 +479,7 @@ public final class MyLocationManager {
          * (non-Javadoc)
          * @see android.os.AsyncTask#doInBackground(Params[])
          */
+        @SuppressWarnings("StatementWithEmptyBody")
         @Override
         protected Void doInBackground(final Void... params) {
             while (!isLocationClientConnected()) {
@@ -489,8 +498,8 @@ public final class MyLocationManager {
             Log.i("NETWORK", "CONNECTED");
             if (!Preferences.getLocationPermissionsGrantFlag(mContext)) return;
             LocationServices.FusedLocationApi
-                    .requestLocationUpdates(mLocationClient, mLocationRequest,
-                            mNetworkLocationListener);
+                .requestLocationUpdates(mGoogleClient, mLocationRequest,
+                    mNetworkLocationListener);
         }
     }
 }

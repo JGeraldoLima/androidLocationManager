@@ -83,6 +83,16 @@ public final class Util {
         }
     }
 
+//    public static void checkLocationsPrecisionConfig(Activity mActivity){
+//        if (!gpsManager.isGPSEnable() && gpsManager.isNetworkEnable()) {
+//            gpsManager
+//                .openLocationPrecisionConfigDialog(mActivity, intent, null, finishActivity);
+//        } else if (!gpsManager.isGPSEnable()
+//            && !gpsManager.isNetworkEnable()) {
+//            gpsManager.openEnableLocationServicesDialog(activity);
+//        }
+//    }
+
     public static void onRequestPermissionsResult(Activity mActivity, Context mContext, int requestCode, int[] grantResults) {
         switch (requestCode) {
             case Constants.LOCATION_PERMISSIONS_CODE: {
@@ -137,7 +147,6 @@ public final class Util {
             .positiveColorRes(R.color.colorPrimaryDark)
             .negativeColorRes(R.color.colorPrimaryDark)
             .positiveText(R.string.ok)
-            .negativeText(R.string.cancel)
             .onPositive(new MaterialDialog.SingleButtonCallback() {
                 @Override
                 public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
@@ -147,6 +156,7 @@ public final class Util {
                     dialog.dismiss();
                 }
             })
+            .negativeText(R.string.cancel)
             .onNegative(new MaterialDialog.SingleButtonCallback() {
                 @Override
                 public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {

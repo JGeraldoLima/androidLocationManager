@@ -15,10 +15,21 @@
     <string name="getting_current_location">Getting your current coordinates . . .</string>
     <string name="nav_about">About the developer</string>
     <string name="locations_permission_denied_msg">It will not be possible to use LocationServices until you give this permission.</string>
-    <string name="ok" translatable="false">OK</string>
+    <string name="ok">OK</string>
     <string name="notice">Notice</string>
     <string name="cancel">Cancel</string>
     <string name="quit_message">Are you sure you want to exit?</string>
     <string name="location_search_timeout">It was not possible to retrieve your position. Would you like to use your last known position? Warning: your last known position is less accurate than the one captured at this moment.</string>
     <string name="invalid_position">It was not possible to define a valid position. Please verify your GPS and Internet connections and try again.</string>
+    <string name="newlocation_name_choosing_dialog_title">New location</string>
+    <string name="newlocation_name_choosing_dialog_content">Insert a name for this location:</string>
+    <string name="newlocation_name_choosing_dialog_hint">Home sweet home</string>
+    <string name="newlocation_saved_successfully">saved successfully!</string>
+    <string name="newlocation_existing_name_error">There is already a location with same name!</string>
+    <string name="save">Salvar</string>
+    <string name="map_normal_type" translatable="false">Normal</string>
+    <string name="map_terrain_type">Terrain</string>
+    <string name="map_satellite_type">Satellite</string>
+    <string name="latitude_pos" translatable="false">-1</string>
+    <string name="longitude_pos" translatable="false">-1</string>
 </resources>

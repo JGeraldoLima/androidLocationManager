@@ -1,31 +1,42 @@
-package locationmanager.jgeraldo.com.androidlocationmanager.entities;
+package locationmanager.jgeraldo.com.androidlocationmanager.storage.models;
 
-public final class MyLocation {
+import java.util.UUID;
 
-    private int mKey;
+import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
+import io.realm.annotations.Required;
 
+public class MyLocation extends RealmObject {
+
+    @PrimaryKey
+    private String mId;
+
+    @Required
     private Double mLatitude;
 
+    @Required
     private Double mLongitude;
 
     private Double mAltitude;
 
+    @Required
     private String mName;
 
     public MyLocation(final String name, final Double latitude,
                       final Double longitude) {
+        mId = UUID.randomUUID().toString();
         mLatitude = latitude;
         mLongitude = longitude;
         mName = name;
         mAltitude = 0.0;
     }
 
-    public int getKey() {
-        return mKey;
+    public String getKey() {
+        return mId;
     }
 
-    public void setKey(int mKey) {
-        this.mKey = mKey;
+    public void setKey(String id) {
+        this.mId = id;
     }
 
     public Double getLatitude() {
@@ -76,5 +87,4 @@ public final class MyLocation {
         }
         return false;
     }
-
 }

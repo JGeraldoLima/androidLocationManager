@@ -19,10 +19,12 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import io.realm.Realm;
 import locationmanager.jgeraldo.com.androidlocationmanager.R;
 import locationmanager.jgeraldo.com.androidlocationmanager.entities.MyLocationManager;
 import locationmanager.jgeraldo.com.androidlocationmanager.listeners.OnHomePressedListener;
 import locationmanager.jgeraldo.com.androidlocationmanager.receivers.PhoneUnlockedReceiver;
+import locationmanager.jgeraldo.com.androidlocationmanager.storage.RealmUtil;
 import locationmanager.jgeraldo.com.androidlocationmanager.ui.fragments.MapsFragment;
 import locationmanager.jgeraldo.com.androidlocationmanager.utils.Constants;
 import locationmanager.jgeraldo.com.androidlocationmanager.utils.KeyWatcher;
@@ -53,6 +55,8 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        RealmUtil.initialize(this);
+
         setContentView(R.layout.activity_main);
 
         mActivity = this;
@@ -75,6 +79,7 @@ public class MainActivity extends AppCompatActivity
 
         loadViewComponents();
         displayView(R.id.nav_map);
+//        checkLocationsAccuracy();
     }
 
     @Override
