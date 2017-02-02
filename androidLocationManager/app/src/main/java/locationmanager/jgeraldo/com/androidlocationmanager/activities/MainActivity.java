@@ -62,33 +62,27 @@ public class MainActivity extends AppCompatActivity
         mActivity = this;
         mContext = getApplicationContext();
         mFragmentManager = getSupportFragmentManager();
+        Util.initGPSManager(mContext, mActivity);
 
         mHomeWatcher = new KeyWatcher(mContext);
         mPhoneLockWatcher = new PhoneUnlockedReceiver();
-
-        registerReceiver(mPhoneLockWatcher, new IntentFilter(
-            ACTION_USER_PRESENT));
-
-        setHomeWatcher();
-
-        Util.checkLocationPermissions(mActivity);
-        Util.initGPSManager(mContext, mActivity);
         mLocationManager = Util.getLocationManager();
 
-        Util.initDataBase(mContext);
+        registerReceiver(mPhoneLockWatcher,
+            new IntentFilter(ACTION_USER_PRESENT));
+        setHomeWatcher();
 
         loadViewComponents();
         displayView(R.id.nav_map);
-//        checkLocationsAccuracy();
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (mLocationManager != null) {
-            mLocationManager.checkLocationServicesStatus();
-        }
-    }
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+//        if (mLocationManager != null) {
+//            mLocationManager.checkLocationServicesStatus();
+//        }
+//    }
 
     @Override
     protected void onDestroy() {
@@ -97,11 +91,14 @@ public class MainActivity extends AppCompatActivity
         mLocationManager.stopUpdates(true);
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
-        Util.onRequestPermissionsResult(mActivity, mContext, requestCode, grantResults);
-    }
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode,
+//                                           String permissions[], int[] grantResults) {
+//        Util.onRequestPermissionsResult(mActivity, mContext, requestCode, grantResults);
+//        if (Preferences.getLocationPermissionsGrantFlag(mContext)) {
+//            displayView(R.id.nav_map);
+//        }
+//    }
 
     private void setHomeWatcher() {
         mHomeWatcher.setOnHomePressedListener(new OnHomePressedListener() {

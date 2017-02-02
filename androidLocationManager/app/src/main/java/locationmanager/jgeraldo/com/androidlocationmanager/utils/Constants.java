@@ -1,5 +1,7 @@
 package locationmanager.jgeraldo.com.androidlocationmanager.utils;
 
+import android.Manifest;
+
 public class Constants {
 
     //FRAGMENTS TAGS
@@ -19,6 +21,9 @@ public class Constants {
     public static final String LOCATION_PERMISSIONS_FLAG = "hasLocationPermissions";
 
     public static final int LOCATION_PERMISSIONS_CODE = 0;
+
+    public static final String[] LOCATION_PERMISSION_CODES = {Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION};
 
     public static final int BUFFER_SIZE = 1024;
 

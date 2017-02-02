@@ -1,6 +1,5 @@
 package locationmanager.jgeraldo.com.androidlocationmanager.utils;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -8,9 +7,11 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -34,16 +35,13 @@ import java.net.URL;
 import java.util.Locale;
 
 import locationmanager.jgeraldo.com.androidlocationmanager.R;
-import locationmanager.jgeraldo.com.androidlocationmanager.entities.MyLocation;
 import locationmanager.jgeraldo.com.androidlocationmanager.entities.MyLocationManager;
-import locationmanager.jgeraldo.com.androidlocationmanager.storage.Database;
 import locationmanager.jgeraldo.com.androidlocationmanager.storage.Preferences;
+import locationmanager.jgeraldo.com.androidlocationmanager.storage.models.MyLocation;
 
 public final class Util {
 
     private static MyLocationManager gpsManager;
-
-    private static Database dataBase;
 
     public static int mNearbyPointsCounter = 0;
 
@@ -54,14 +52,6 @@ public final class Util {
         gpsManager = new MyLocationManager(context, activity);
     }
 
-    public static void initDataBase(final Context context) {
-        dataBase = new Database(context);
-    }
-
-    public static void closeDataBaseInstance() {
-        dataBase.close();
-    }
-
     public static String getString(final Context context, final int id) {
         return context.getResources().getString(id);
     }
@@ -70,16 +60,15 @@ public final class Util {
         return gpsManager;
     }
 
-    public static Database getDataBase() {
-        return dataBase;
-    }
-
-    public static void checkLocationPermissions(Activity activity) {
-        if (!Preferences.getLocationPermissionsGrantFlag(activity.getApplicationContext())) {
-            ActivityCompat.requestPermissions(activity,
-                new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION},
-                Constants.LOCATION_PERMISSIONS_CODE);
+    public static void checkPermissions(Activity activity, String permissionKey, String[] permissions, int requestCode,
+                                        Fragment fragment) {
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+            && !Preferences.getPermissionGrantFlag(permissionKey, activity.getApplicationContext())) {
+            if (fragment != null) {
+                fragment.requestPermissions(permissions, requestCode);
+            } else {
+                ActivityCompat.requestPermissions(activity, permissions, requestCode);
+            }
         }
     }
 
@@ -98,7 +87,7 @@ public final class Util {
             case Constants.LOCATION_PERMISSIONS_CODE: {
                 if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Preferences.setLocationPermissionsGrantFlag(mContext, true);
+                    Preferences.setPermissionGrantFlag(mContext, Constants.LOCATION_PERMISSIONS_FLAG, true);
                     gpsManager.checkLocationServicesStatus();
                 } else {
                     showSnackBar(mActivity, getString(mContext, R.string.locations_permission_denied_msg));
@@ -227,7 +216,7 @@ public final class Util {
         @Override
         protected Void doInBackground(final Void... params) {
 
-            // pegar locale do device
+            // get device location
             this.urlRoute = String.format(Locale.US,
                 "http://maps.googleapis.com/maps/api/"
                     + "directions/json?origin="

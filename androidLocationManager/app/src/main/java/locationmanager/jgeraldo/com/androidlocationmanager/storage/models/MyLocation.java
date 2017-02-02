@@ -31,6 +31,10 @@ public class MyLocation extends RealmObject {
         mAltitude = 0.0;
     }
 
+    public MyLocation() {
+
+    }
+
     public String getKey() {
         return mId;
     }

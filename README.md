@@ -42,6 +42,7 @@ This project contains an implementation example, which one is on GooglePlay too 
 - [MaterialDialogs by afollestad](https://github.com/afollestad/material-dialogs)
 - [Keywatch](http://stackoverflow.com/questions/8881951/detect-home-button-press-in-android)
 - [PhoneUnlockedReceiver](http://stackoverflow.com/questions/3446202/android-detect-phone-unlock-event-not-screen-on)
+- [Realm for Android](https://github.com/realm/realm-java) (and thanks to [Milan Bárta tutorial](https://barta.me/persist-data-android-realm/?utm_source=linkedin&utm_medium=AndroidProgramming&utm_campaign=PersistdataeffectivelywithAndroidRealmdatabase)! It was really come in handy :))
 
 # License
 

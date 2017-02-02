@@ -1,27 +1,20 @@
 package locationmanager.jgeraldo.com.androidlocationmanager.entities;
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.Context;
-import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.util.Log;
-import android.view.View;
-import android.view.Window;
-import android.widget.Button;
-import android.widget.TextView;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
-import locationmanager.jgeraldo.com.androidlocationmanager.R;
 import locationmanager.jgeraldo.com.androidlocationmanager.listeners.NetworkLocationListener;
 import locationmanager.jgeraldo.com.androidlocationmanager.listeners.SatelliteLocationListener;
 import locationmanager.jgeraldo.com.androidlocationmanager.storage.Preferences;
-import locationmanager.jgeraldo.com.androidlocationmanager.utils.Util;
+import locationmanager.jgeraldo.com.androidlocationmanager.utils.Constants;
 
 public final class MyLocationManager {
 
@@ -161,7 +154,7 @@ public final class MyLocationManager {
     }
 
     public void setLastKnownLocation() {
-        if (!Preferences.getLocationPermissionsGrantFlag(mContext)) return;
+        if (!Preferences.getPermissionGrantFlag(Constants.LOCATION_PERMISSIONS_FLAG, mContext)) return;
         Location lastKnownGPS = getBetterLocationAux(mLocationManager
             .getLastKnownLocation(LocationManager.GPS_PROVIDER), mSatelliteLocation);
         Location lastKnownNetwork = getBetterLocationAux(mLocationManager
@@ -267,7 +260,7 @@ public final class MyLocationManager {
     }
 
     public void startUpdates(final boolean useGPS, final boolean useNetwork) {
-        if (!Preferences.getLocationPermissionsGrantFlag(mContext)) return;
+        if (!Preferences.getPermissionGrantFlag(Constants.LOCATION_PERMISSIONS_FLAG, mContext)) return;
         if (useGPS) {
             mLocationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER, LOCATION_MANAGER_MIN_TIME,
@@ -285,7 +278,7 @@ public final class MyLocationManager {
     }
 
     public void stopUpdates(final boolean clearData) {
-        if (!Preferences.getLocationPermissionsGrantFlag(mContext)) return;
+        if (!Preferences.getPermissionGrantFlag(Constants.LOCATION_PERMISSIONS_FLAG, mContext)) return;
         mLocationManager.removeUpdates(mSatteliteLocationListener);
         setGPSUpdatingState(false);
 
@@ -496,7 +489,7 @@ public final class MyLocationManager {
         protected void onPostExecute(final Void result) {
             super.onPostExecute(result);
             Log.i("NETWORK", "CONNECTED");
-            if (!Preferences.getLocationPermissionsGrantFlag(mContext)) return;
+            if (!Preferences.getPermissionGrantFlag(Constants.LOCATION_PERMISSIONS_FLAG, mContext)) return;
             LocationServices.FusedLocationApi
                 .requestLocationUpdates(mGoogleClient, mLocationRequest,
                     mNetworkLocationListener);

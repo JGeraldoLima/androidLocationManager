@@ -28,9 +28,9 @@ public class Preferences {
         loggedUserPreferenvesEditor.apply();
     }
 
-    public static boolean getLocationPermissionsGrantFlag(Context context) {
+    public static boolean getPermissionGrantFlag(String permissionKey, Context context) {
         initiatePreferencesIfNull(context);
-        return loggedUserPreferences.getBoolean(Constants.LOCATION_PERMISSIONS_FLAG, false);
+        return loggedUserPreferences.getBoolean(permissionKey, false);
     }
 
     public static Double getUserLatitudePos(Context context) {
@@ -45,9 +45,9 @@ public class Preferences {
         return Double.parseDouble(loggedUserPreferences.getFloat(userLongitudePos, -1F) + "");
     }
 
-    public static void setLocationPermissionsGrantFlag(Context context, boolean granted) {
+    public static void setPermissionGrantFlag(Context context, String permissionKey, boolean granted) {
         initiatePreferencesIfNull(context);
-        loggedUserPreferenvesEditor.putBoolean(Constants.LOCATION_PERMISSIONS_FLAG, granted);
+        loggedUserPreferenvesEditor.putBoolean(permissionKey, granted);
         saveChanges();
     }
 

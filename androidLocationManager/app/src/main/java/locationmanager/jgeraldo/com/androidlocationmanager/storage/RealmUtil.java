@@ -45,4 +45,12 @@ public class RealmUtil {
             .findAll();
         return locations.subList(0, locations.size());
     }
+
+    public static boolean locationNameAlreadyExists(String name) {
+        Realm realm = Realm.getDefaultInstance();
+        RealmResults<MyLocation> found = realm.where(MyLocation.class)
+            .equalTo("mName", name)
+            .findAll();
+        return found.size() != 0;
+    }
 }
