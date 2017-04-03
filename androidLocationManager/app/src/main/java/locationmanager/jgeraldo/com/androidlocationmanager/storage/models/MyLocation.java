@@ -3,13 +3,18 @@ package locationmanager.jgeraldo.com.androidlocationmanager.storage.models;
 import java.util.UUID;
 
 import io.realm.RealmObject;
+import io.realm.annotations.Index;
 import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.Required;
 
 public class MyLocation extends RealmObject {
 
+    @Index
     @PrimaryKey
     private String mId;
+
+    @Required
+    private String mCategoryId;
 
     @Required
     private Double mLatitude;
@@ -22,12 +27,12 @@ public class MyLocation extends RealmObject {
     @Required
     private String mName;
 
-    public MyLocation(final String name, final Double latitude,
+    public MyLocation(final String name, final String categoryId, final Double latitude,
                       final Double longitude) {
-        mId = UUID.randomUUID().toString();
+        mName = name;
+        mCategoryId = categoryId;
         mLatitude = latitude;
         mLongitude = longitude;
-        mName = name;
         mAltitude = 0.0;
     }
 
@@ -41,6 +46,22 @@ public class MyLocation extends RealmObject {
 
     public void setKey(String id) {
         this.mId = id;
+    }
+
+    public String getName() {
+        return mName;
+    }
+
+    public void setName(final String name) {
+        mName = name;
+    }
+
+    public String getCategory() {
+        return mCategoryId;
+    }
+
+    public void setCategory(String categoryId) {
+        this.mCategoryId = categoryId;
     }
 
     public Double getLatitude() {
@@ -65,14 +86,6 @@ public class MyLocation extends RealmObject {
 
     public void setAltitude(Double altitude) {
         this.mAltitude = altitude;
-    }
-
-    public String getName() {
-        return mName;
-    }
-
-    public void setName(final String name) {
-        mName = name;
     }
 
     /*

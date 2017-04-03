@@ -2,21 +2,29 @@ package locationmanager.jgeraldo.com.androidlocationmanager.entities;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.Build;
+import android.os.Bundle;
+import android.provider.Settings;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
+import locationmanager.jgeraldo.com.androidlocationmanager.R;
 import locationmanager.jgeraldo.com.androidlocationmanager.listeners.NetworkLocationListener;
 import locationmanager.jgeraldo.com.androidlocationmanager.listeners.SatelliteLocationListener;
-import locationmanager.jgeraldo.com.androidlocationmanager.storage.Preferences;
 import locationmanager.jgeraldo.com.androidlocationmanager.utils.Constants;
+import locationmanager.jgeraldo.com.androidlocationmanager.utils.Util;
 
-public final class MyLocationManager {
+public final class MyLocationManager implements GoogleApiClient.ConnectionCallbacks {
 
     private static Context mContext;
 
@@ -38,46 +46,47 @@ public final class MyLocationManager {
 
     private LocationRequest mLocationRequest;
 
-    /** the request time interval in milliseconds. The LocationManager will ask for
-     * new updates every LOCATION_REQUEST_INTERVAL ms
-     * **/
+    /**
+     * The request time interval in milliseconds. The LocationManager will ask for
+     * new updates every LOCATION_REQUEST_INTERVAL ms.
+     **/
     private static final int LOCATION_REQUEST_INTERVAL = 1000;
 
     /**
-     * the GPS sattelite updating state to control whether start GPS updates.
+     * The GPS sattelite updating state to control whether start GPS updates.
      * If it is already receiving updates, there is no need to ask again for it.
      **/
     private static boolean mGPSUpdatingState;
 
     /**
-     * the network updating state to control whether start network updates.
+     * The network updating state to control whether start network updates.
      * If it is already receiving updates, there is no need to connect the client
      * and ask again for it.
      **/
     private static boolean mNetworkUpdatingState;
 
     /**
-     * the minTime flag used by LocationManager's requestLocationUpdates method
+     * The minTime flag used by LocationManager's requestLocationUpdates method.
      **/
     private static final long LOCATION_MANAGER_MIN_TIME = 10;
 
     /**
-     * the minDistance flag used by LocationManager's requestLocationUpdates method
+     * The minDistance flag used by LocationManager's requestLocationUpdates method.
      **/
     private static final float LOCATION_MANAGER_MIN_DISTANCE = 0;
 
     /**
-     * the minimum accuracy considered for a valid position
+     * The minimum accuracy considered for a valid position.
      **/
     private static final float LOCATION_MANAGER_MIN_ACCURACY = 5;
 
     /**
-     * the maximum accuracy considered for a valid position
+     * The maximum accuracy considered for a valid position.
      **/
     private static final float LOCATION_MANAGER_MAX_ACCURACY = 20;
 
     /**
-     * Max limit time in milliseconds to wait for valid coordinates
+     * Max limit time in milliseconds to wait for valid coordinates.
      **/
     public static final int TIMER_TIMEOUT = 60000;
 
@@ -88,7 +97,7 @@ public final class MyLocationManager {
 
     /**
      * Timer State flag to control it externally.
-     * This is necessary due some bugs on CountDownTimer
+     * This is necessary due some bugs on it.
      **/
     private boolean timerState;
 
@@ -154,7 +163,7 @@ public final class MyLocationManager {
     }
 
     public void setLastKnownLocation() {
-        if (!Preferences.getPermissionGrantFlag(Constants.LOCATION_PERMISSIONS_FLAG, mContext)) return;
+        if (!Util.isPermissionsGranted(Constants.LOCATION_PERMISSION_CODES, mContext)) return;
         Location lastKnownGPS = getBetterLocationAux(mLocationManager
             .getLastKnownLocation(LocationManager.GPS_PROVIDER), mSatelliteLocation);
         Location lastKnownNetwork = getBetterLocationAux(mLocationManager
@@ -239,8 +248,9 @@ public final class MyLocationManager {
                 LocationServices.API).build();
         }
 
-        if (isNetworkEnable()) {
+        if (isNetworkProviderEnable()) {
             mGoogleClient.connect();
+            mGoogleClient.registerConnectionCallbacks(this);
         }
     }
 
@@ -248,37 +258,38 @@ public final class MyLocationManager {
         mGoogleClient.disconnect();
     }
 
-    public void checkLocationServicesStatus() {
-        if (isGPSEnable() && isNetworkEnable()) {
+    public void startLocationUpdatesByPrecisionStatus() {
+        if (isGPSProviderEnable() && isNetworkProviderEnable()) {
             startUpdates(true, true);
-        } else if (!isGPSEnable() && isNetworkEnable() && !isNetworkLocationUpdating()) {
+        } else if (!isGPSProviderEnable() && isNetworkProviderEnable() && !isNetworkLocationUpdating()) {
             startUpdates(false, true);
-        } else if (isGPSEnable() && !isNetworkEnable() && !isGPSLocationUpdating()) {
+        } else if (isGPSProviderEnable() && !isNetworkProviderEnable() && !isGPSLocationUpdating()) {
             startUpdates(true, false);
         }
         setLastKnownLocation();
     }
 
     public void startUpdates(final boolean useGPS, final boolean useNetwork) {
-        if (!Preferences.getPermissionGrantFlag(Constants.LOCATION_PERMISSIONS_FLAG, mContext)) return;
-        if (useGPS) {
-            mLocationManager.requestLocationUpdates(
-                LocationManager.GPS_PROVIDER, LOCATION_MANAGER_MIN_TIME,
-                LOCATION_MANAGER_MIN_DISTANCE, mSatteliteLocationListener);
-            setGPSUpdatingState(true);
-        }
-
-        if (useNetwork) {
-            if (!isLocationClientConnected()) {
-                connectClient();
+        if (Util.isPermissionsGranted(Constants.LOCATION_PERMISSION_CODES, mContext)) {
+            if (useGPS) {
+                Log.e("START", "GPS");
+                mLocationManager.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER, LOCATION_MANAGER_MIN_TIME,
+                    LOCATION_MANAGER_MIN_DISTANCE, mSatteliteLocationListener);
+                setGPSUpdatingState(true);
             }
-            setNetworkUpdatingState(true);
-            new NetworkConnection().execute();
+
+            if (useNetwork) {
+                Log.e("START", "NETWORK");
+                if (!isLocationClientConnected()) {
+                    connectClient();
+                }
+            }
         }
     }
 
     public void stopUpdates(final boolean clearData) {
-        if (!Preferences.getPermissionGrantFlag(Constants.LOCATION_PERMISSIONS_FLAG, mContext)) return;
+        if (!Util.isPermissionsGranted(Constants.LOCATION_PERMISSION_CODES, mContext)) return;
         mLocationManager.removeUpdates(mSatteliteLocationListener);
         setGPSUpdatingState(false);
 
@@ -418,11 +429,30 @@ public final class MyLocationManager {
 //        alertDialog.show();
 //    }
 
-    public boolean isGPSEnable() {
+    public boolean checkLocationServicesStatus() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            int locationMode = 0;
+
+            try {
+                locationMode = Settings.Secure.getInt(mContext.getContentResolver(), Settings.Secure.LOCATION_MODE);
+            } catch (Settings.SettingNotFoundException e) {
+                e.printStackTrace();
+                return false;
+            }
+
+            return locationMode != Settings.Secure.LOCATION_MODE_OFF;
+        } else {
+            String locationProviders = Settings.Secure.getString(mContext.getContentResolver(),
+                Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+            return !TextUtils.isEmpty(locationProviders);
+        }
+    }
+
+    public boolean isGPSProviderEnable() {
         return mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
     }
 
-    public boolean isNetworkEnable() {
+    public boolean isNetworkProviderEnable() {
         return mLocationManager
             .isProviderEnabled(LocationManager.NETWORK_PROVIDER);
     }
@@ -466,6 +496,18 @@ public final class MyLocationManager {
         return mGoogleClient.isConnected();
     }
 
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        setNetworkUpdatingState(true);
+        new NetworkConnection().execute();
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        // TODO: remove code coupling between this manager and other classes like Util
+        Util.showSnackBar(mActivity, Util.getString(mContext, R.string.google_client_not_connected));
+    }
+
     private class NetworkConnection extends AsyncTask<Void, Void, Void> {
 
         /*
@@ -489,7 +531,7 @@ public final class MyLocationManager {
         protected void onPostExecute(final Void result) {
             super.onPostExecute(result);
             Log.i("NETWORK", "CONNECTED");
-            if (!Preferences.getPermissionGrantFlag(Constants.LOCATION_PERMISSIONS_FLAG, mContext)) return;
+            if (!Util.isPermissionsGranted(Constants.LOCATION_PERMISSION_CODES, mContext)) return;
             LocationServices.FusedLocationApi
                 .requestLocationUpdates(mGoogleClient, mLocationRequest,
                     mNetworkLocationListener);

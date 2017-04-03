@@ -28,4 +28,10 @@
     <string name="save">Salvar</string>
     <string name="map_terrain_type">Terreno</string>
     <string name="map_satellite_type">Satélite</string>
+    <string name="enable_location_services">Os serviços de localização está desativados. Você precisa ativá-los para que seja possível utilizar as funcionalides deste app. Gostaria de ativar agora?</string>
+    <string name="enable_location_services_deny_msg">Você não poderá utilizar as funcionalidades do app até que ative os Serviços de Localização.</string>
+    <string name="locations_list_empty_database">Não há locais salvos no momento. Clique no botão \'+\' para adicionar o seu primeiro local.</string>
+    <string name="fab_add_new_category">Adicionar categoria</string>
+    <string name="fab_add_new_poi">Adicionar novo local</string>
+    <string name="google_client_not_connected">Houve um problema ao tentar connectar com o cliente Google. Enquanto isso, atualizações de localização serão fornecidas apenas por satélite.</string>
 </resources>

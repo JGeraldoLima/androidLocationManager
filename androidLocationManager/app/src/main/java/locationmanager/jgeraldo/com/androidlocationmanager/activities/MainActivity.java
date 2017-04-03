@@ -5,7 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -19,12 +21,15 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import io.realm.Realm;
 import locationmanager.jgeraldo.com.androidlocationmanager.R;
 import locationmanager.jgeraldo.com.androidlocationmanager.entities.MyLocationManager;
 import locationmanager.jgeraldo.com.androidlocationmanager.listeners.OnHomePressedListener;
 import locationmanager.jgeraldo.com.androidlocationmanager.receivers.PhoneUnlockedReceiver;
 import locationmanager.jgeraldo.com.androidlocationmanager.storage.RealmUtil;
+import locationmanager.jgeraldo.com.androidlocationmanager.ui.fragments.LocationsListFragment;
 import locationmanager.jgeraldo.com.androidlocationmanager.ui.fragments.MapsFragment;
 import locationmanager.jgeraldo.com.androidlocationmanager.utils.Constants;
 import locationmanager.jgeraldo.com.androidlocationmanager.utils.KeyWatcher;
@@ -73,16 +78,28 @@ public class MainActivity extends AppCompatActivity
         setHomeWatcher();
 
         loadViewComponents();
-        displayView(R.id.nav_map);
     }
 
-//    @Override
-//    protected void onResume() {
-//        super.onResume();
-//        if (mLocationManager != null) {
-//            mLocationManager.checkLocationServicesStatus();
-//        }
-//    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (mLocationManager == null) {
+            Util.initGPSManager(mContext, mActivity);
+            mLocationManager = Util.getLocationManager();
+        }
+
+        if (mLocationManager.checkLocationServicesStatus()) {
+            if (Util.checkPermissions(mActivity, Constants.LOCATION_PERMISSIONS_FLAG,
+                Constants.LOCATION_PERMISSION_CODES, Constants.LOCATION_PERMISSIONS_CODE, null)) {
+                mLocationManager.startLocationUpdatesByPrecisionStatus();
+                displayView(R.id.nav_map);
+            }
+            // TODO run more exploration tests: what to do if it returns false?
+        } else {
+            Util.openEnableLocationServicesDialog(mActivity);
+        }
+    }
 
     @Override
     protected void onDestroy() {
@@ -91,14 +108,16 @@ public class MainActivity extends AppCompatActivity
         mLocationManager.stopUpdates(true);
     }
 
-//    @Override
-//    public void onRequestPermissionsResult(int requestCode,
-//                                           String permissions[], int[] grantResults) {
-//        Util.onRequestPermissionsResult(mActivity, mContext, requestCode, grantResults);
-//        if (Preferences.getLocationPermissionsGrantFlag(mContext)) {
-//            displayView(R.id.nav_map);
-//        }
-//    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[],
+                                           @NonNull int[] grantResults) {
+        Util.onRequestPermissionsResult(mActivity, mContext, requestCode, grantResults);
+        if (Util.isPermissionsGranted(Constants.LOCATION_PERMISSION_CODES, mContext)) {
+            displayView(R.id.nav_map);
+        } else {
+            mActivity.finish();
+        }
+    }
 
     private void setHomeWatcher() {
         mHomeWatcher.setOnHomePressedListener(new OnHomePressedListener() {
@@ -147,7 +166,7 @@ public class MainActivity extends AppCompatActivity
 //            intent = new Intent(mActivity, MapsActivity.class);
         } else if (itemId == R.id.nav_poi_list) {
             tag = Constants.POI_LIST_FRAGMENT;
-//            fragment = new POIListFragment();
+            fragment = new LocationsListFragment();
         } else if (itemId == R.id.nav_settings) {
             tag = Constants.SETTINGS_FRAGMENT;
 //            fragment = new SettingsFragment();
@@ -172,7 +191,8 @@ public class MainActivity extends AppCompatActivity
         mTransaction = mFragmentManager.beginTransaction();
         mTransaction.replace(R.id.frame_container, fragment, tag);
         mTransaction.addToBackStack(null);
-        mTransaction.commit();
+//        mTransaction.commit();
+        mTransaction.commitAllowingStateLoss();
     }
 
     @Override
@@ -182,7 +202,6 @@ public class MainActivity extends AppCompatActivity
             drawer.closeDrawer(GravityCompat.START);
         } else {
             if (mFragmentManager.getBackStackEntryCount() <= 1) {
-                mLocationManager.stopUpdates(false);
                 Util.openQuestionAlertDialog(mActivity, Util.getString(mContext, R.string.quit_message), true);
             } else {
                 mFragmentManager.popBackStackImmediate();

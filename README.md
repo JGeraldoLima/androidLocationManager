@@ -1,9 +1,13 @@
-![](screens/web_hi_res_512.png)
-
-
 # androidLocationManager
+
+[![GitHub license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/JGeraldoLima/androidLocationManager/blob/master/LICENSE.txt)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/JGeraldoLima/androidLocationManager/blob/master/LICENSE.txt)
+![](screens/web_hi_res_512.png =480x854)
+
 An complete, easy-to-use and reusable LocationManager for Android, using GoogleAPIs. 
 Plus, a direct tutorial to configure your project from start to end, resuming Google's guides and adding some tips!
+
+This repo is dedicated to Android beginners and lazy seniors :p
 
 # Getting started
 
@@ -20,7 +24,7 @@ Any of them are pretty simple to do. Plus, take [this shorcut](http://stackoverf
 # Usage
 
 Just copy-paste the LocationManager class to your project and be happy :) 
-This project contains an implementation example, which one is on GooglePlay too (**link**).
+This project contains an implementation example, which one is on [GooglePlay too](https://play.google.com/store/apps/details?id=locationmanager.jgeraldo.com.androidlocationmanager).
 
 # Sample Features
 
@@ -31,6 +35,22 @@ This project contains an implementation example, which one is on GooglePlay too 
 - Trace a route from your current position to a selected location
 - Share your location with a friend!
 - (SOON) Export/Import your locations database
+- (SOON) Locations categories management 
+
+# Compatibility
+
+- Android Jelly Bean 4.1+ (API 16) (Testing on lower versions)
+
+# Changelog
+
+### Version: 1.0
+
+  * Initial Build
+
+#### Let me know about your projects!
+
+Feel free to sent me links of your projects where you use my lib. I'd be glad to publish them here!
+Just send me an email (j.gbaixinho@gmail.com) and let me know if you have any questions or suggestion about this project. 
 
 # API Documentation
 
@@ -40,6 +60,7 @@ This project contains an implementation example, which one is on GooglePlay too 
 - [AndroidAssetStudio](http://romannurik.github.io/AndroidAssetStudio/index.html)
 - [fab-speed-dial by yavski](https://github.com/yavski/fab-speed-dial)
 - [MaterialDialogs by afollestad](https://github.com/afollestad/material-dialogs)
+- [android-advancedrecyclerview by h6ah4i](https://github.com/h6ah4i/android-advancedrecyclerview)
 - [Keywatch](http://stackoverflow.com/questions/8881951/detect-home-button-press-in-android)
 - [PhoneUnlockedReceiver](http://stackoverflow.com/questions/3446202/android-detect-phone-unlock-event-not-screen-on)
 - [Realm for Android](https://github.com/realm/realm-java) (and thanks to [Milan Bárta tutorial](https://barta.me/persist-data-android-realm/?utm_source=linkedin&utm_medium=AndroidProgramming&utm_campaign=PersistdataeffectivelywithAndroidRealmdatabase)! It was really come in handy :))

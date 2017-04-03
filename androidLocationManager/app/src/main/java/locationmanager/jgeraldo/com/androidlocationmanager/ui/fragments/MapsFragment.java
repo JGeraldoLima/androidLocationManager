@@ -89,36 +89,21 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
         mFragment = this;
         mActivity = getActivity();
         mContext = mActivity.getApplicationContext();
-        mToolbar = (Toolbar) mActivity.findViewById(R.id.toolbar);
 
         mFragmentManager = getChildFragmentManager();
         mLocationManager = Util.getLocationManager();
-
-        Util.checkPermissions(mActivity, Constants.LOCATION_PERMISSIONS_FLAG, Constants.LOCATION_PERMISSION_CODES,
-            Constants.LOCATION_PERMISSIONS_CODE, this);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-
-        if (mLocationManager != null
-            && Preferences.getPermissionGrantFlag(Constants.LOCATION_PERMISSIONS_FLAG, mContext)) {
-
-            mLocationManager.checkLocationServicesStatus();
-
-            if (Preferences.getUserLatitudePos(mContext) == -1
-                && Preferences.getUserLongitudePos(mContext) == -1) {
-                new GetCurrentCoordinates().execute();
-            } else {
-                currentMarkerLocation = new LatLng(Preferences.getUserLatitudePos(mContext), Preferences.getUserLongitudePos(mContext));
-            }
-        }
+        setUpLocationUpdates();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        mToolbar = (Toolbar) mActivity.findViewById(R.id.toolbar);
         mToolbar.setTitle(R.string.nav_map);
         if (view == null) {
             view = inflater.inflate(R.layout.fragment_map, container, false);
@@ -135,9 +120,17 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[],
+                                           @NonNull int[] grantResults) {
         Util.onRequestPermissionsResult(mActivity, mContext, requestCode, grantResults);
+        if (Util.isPermissionsGranted(Constants.LOCATION_PERMISSION_CODES, mContext)) {
+            // TODO: may we could have a NPE here. Check it deep in the future.
+            mLocationManager.startLocationUpdatesByPrecisionStatus();
+            new GetCurrentCoordinates().execute();
+
+        } else {
+            mActivity.finish();
+        }
     }
 
     @Override
@@ -147,6 +140,28 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
         }
         RealmUtil.close();
         super.onDestroyView();
+    }
+
+    private void setUpLocationUpdates() {
+        if (mLocationManager != null) {
+            mLocationManager.startLocationUpdatesByPrecisionStatus();
+            Location lastKnowLoc = mLocationManager.getLastKnownLocation();
+            setUpCurrentMarkerLocation(lastKnowLoc);
+        } else {
+            Util.initGPSManager(mContext, mActivity);
+            mLocationManager = Util.getLocationManager();
+            mLocationManager.startLocationUpdatesByPrecisionStatus();
+            Location lastKnowLoc = mLocationManager.getLastKnownLocation();
+            setUpCurrentMarkerLocation(lastKnowLoc);
+        }
+    }
+
+    private void setUpCurrentMarkerLocation(Location lastKnowLoc) {
+        if (MyLocationManager.isLocationInvalid(lastKnowLoc)) {
+            new GetCurrentCoordinates().execute();
+        } else {
+            currentMarkerLocation = new LatLng(lastKnowLoc.getLatitude(), lastKnowLoc.getLongitude());
+        }
     }
 
     private void setViews() {
@@ -160,7 +175,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
                     openNewLocationNameChoosingDialog();
                     return true;
                 } else if (itemId == R.id.ic_goto_my_position) {
-                    if (!Preferences.getPermissionGrantFlag(Constants.LOCATION_PERMISSIONS_FLAG, mContext)) {
+                    if (!Util.isPermissionsGranted(Constants.LOCATION_PERMISSION_CODES, mContext)) {
                         Util.checkPermissions(mActivity, Constants.LOCATION_PERMISSIONS_FLAG, Constants.LOCATION_PERMISSION_CODES,
                             Constants.LOCATION_PERMISSIONS_CODE, mFragment);
                     } else {
@@ -228,7 +243,10 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
             builder.include(currentMarkerLocation);
 
             // TODO: change it to get live GPS position instead
-            currentMarkerOptions = new MarkerOptions().position(currentMarkerLocation).title(Util.getString(mContext, R.string.current_location)).icon(myLocationIcon);
+            currentMarkerOptions = new MarkerOptions()
+                .position(currentMarkerLocation)
+                .title(Util.getString(mContext, R.string.current_location))
+                .icon(myLocationIcon);
             currentMarker = mMap.addMarker(currentMarkerOptions);
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentMarkerLocation, Constants.DEFAULT_MAP_ZOOM));
 
@@ -268,7 +286,8 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
     private void createRenterMarkerOnMap(BitmapDescriptor markerIcon, MyLocation location) {
         Marker marker = mMap.addMarker(new MarkerOptions()
             .position(new LatLng(location.getLatitude(), location.getLongitude()))
-            .title(location.getName()).icon(markerIcon));
+            .title(location.getName())
+            .icon(markerIcon));
         addMarkerToMap(marker);
     }
 
@@ -352,9 +371,8 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
                     // If flow is passing here, it means that the Save button is unlocked
                     // and there are no errors.
                     String name = dialog.getInputEditText().getText().toString();
-                    MyLocation location = new MyLocation(name,
-                        currentMarkerLocation.latitude, currentMarkerLocation.longitude);
-                    RealmUtil.createNewLocation(location);
+                    RealmUtil.createNewLocation(name, "0",
+                        currentMarkerLocation.latitude, currentMarkerLocation.longitude, null);
                     loadDatabaseLocationsOnMap();
                 }
             })
@@ -416,7 +434,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
         @Override
         protected Void doInBackground(final Void... params) {
 
-            if (mLocationManager.isGPSEnable()) {
+            if (mLocationManager.isGPSProviderEnable()) {
                 Log.e("CAPTURE", "BY BOTH");
                 while (MyLocationManager.isLocationInvalid(
                     mLocationManager.getSatelliteLocation())

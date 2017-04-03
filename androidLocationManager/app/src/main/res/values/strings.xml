@@ -15,7 +15,7 @@
     <string name="getting_current_location">Getting your current coordinates . . .</string>
     <string name="nav_about">About the developer</string>
     <string name="locations_permission_denied_msg">It will not be possible to use LocationServices until you give this permission.</string>
-    <string name="ok">OK</string>
+    <string name="ok" translatable="false">OK</string>
     <string name="notice">Notice</string>
     <string name="cancel">Cancel</string>
     <string name="quit_message">Are you sure you want to exit?</string>
@@ -32,4 +32,12 @@
     <string name="map_satellite_type">Satellite</string>
     <string name="latitude_pos" translatable="false">-1</string>
     <string name="longitude_pos" translatable="false">-1</string>
+    <string name="enable_location_services">The location services are disable. You need to enable it to be able to use this app\'s features. Would you like to do it now?</string>
+    <string name="enable_location_services_deny_msg">You will not be able to use the app\'s features until enable the Location Services.</string>
+    <string name="locations_list_empty_database">There are no locations saved a moment. Click on \'+\' button to save your first location.</string>
+    <string name="latitude_tv" translatable="false">Latitude: %s</string>
+    <string name="longitude_tv" translatable="false">Longitude: %s</string>
+    <string name="fab_add_new_category">Add new category</string>
+    <string name="fab_add_new_poi">Add new location</string>
+    <string name="google_client_not_connected">There was a problem trying to connect google client. While this not happen, locations updates willbe provided just by sattelite.</string>
 </resources>

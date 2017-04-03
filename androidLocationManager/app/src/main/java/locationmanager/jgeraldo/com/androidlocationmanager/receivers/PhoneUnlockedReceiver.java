@@ -21,7 +21,7 @@ public class PhoneUnlockedReceiver extends BroadcastReceiver {
         if (keyguardManager.isKeyguardSecure()) {
             MyLocationManager mLocationManager = Util.getLocationManager();
             if (mLocationManager != null) {
-                mLocationManager.checkLocationServicesStatus();
+                mLocationManager.startLocationUpdatesByPrecisionStatus();
             }
         }
     }
