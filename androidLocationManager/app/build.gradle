@@ -36,6 +36,8 @@ dependencies {
     compile 'com.afollestad.material-dialogs:core:0.9.3.0'
     compile 'com.afollestad.material-dialogs:commons:0.9.3.0'
 
+    compile 'com.github.ganfra:material-spinner:1.1.1'
+
     compile 'com.diegodobelo.expandingview:expanding-view:0.9.4'
     dependencies {
         compile ('com.h6ah4i.android.widget.advrecyclerview:advrecyclerview:0.10.3@aar'){

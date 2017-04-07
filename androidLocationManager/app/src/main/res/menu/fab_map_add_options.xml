@@ -5,6 +5,10 @@
         android:icon="@mipmap/ic_add_poi"
         android:title="@string/nav_add_poi"/>
     <item
+        android:id="@+id/ic_add_new_category"
+        android:icon="@mipmap/ic_add_category"
+        android:title="@string/nav_add_category"/>
+    <item
         android:id="@+id/ic_goto_my_position"
         android:icon="@mipmap/ic_goto_my_location"
         android:title="@string/fab_goto_my_position" />

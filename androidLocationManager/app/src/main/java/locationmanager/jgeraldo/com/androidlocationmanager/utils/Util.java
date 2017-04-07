@@ -116,10 +116,6 @@ public final class Util {
                 if (grantResults.length > 0 && ArrayUtils.contains(grantResults, PackageManager.PERMISSION_GRANTED)) {
                     Preferences.setPermissionGrantFlag(mContext, Constants.LOCATION_PERMISSIONS_FLAG, true);
                     gpsManager.startLocationUpdatesByPrecisionStatus();
-                    // TODO: find a proper way to call MapsFragment.GetCurrentCoordinates. Would be even better if it
-                    // turns to a generic mechanism, so for each request code we could execute something (it's during
-                    // these times I miss javascript so much :'( )
-                    // TIP: maybe an AsyncTask lib could help me?
                 } else {
                     showSnackBar(mActivity, getString(mContext, R.string.locations_permission_denied_msg));
                 }
@@ -181,34 +177,6 @@ public final class Util {
             .onNegative(new MaterialDialog.SingleButtonCallback() {
                 @Override
                 public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                    dialog.dismiss();
-                }
-            });
-
-        MaterialDialog alertDialog = builder.build();
-        alertDialog.show();
-    }
-
-    public static void openEnableLocationServicesDialog(final Activity activity) {
-        MaterialDialog.Builder builder = new MaterialDialog.Builder(activity)
-            .title(R.string.notice)
-            .content(R.string.enable_location_services)
-            .positiveColorRes(R.color.colorPrimaryDark)
-            .negativeColorRes(R.color.colorPrimaryDark)
-            .positiveText("OK")  // TODO: waiting for @afollestad fix on MaterialDialogs lib
-            .negativeText(R.string.cancel)
-            .onPositive(new MaterialDialog.SingleButtonCallback() {
-                @Override
-                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                    final Intent i = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                    activity.startActivity(i);
-                    dialog.dismiss();
-                }
-            })
-            .onNegative(new MaterialDialog.SingleButtonCallback() {
-                @Override
-                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                    activity.finish();
                     dialog.dismiss();
                 }
             });

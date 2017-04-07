@@ -9,11 +9,14 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.afollestad.materialdialogs.DialogAction;
+import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -389,45 +392,33 @@ public final class MyLocationManager implements GoogleApiClient.ConnectionCallba
 //        alertDialog.show();
 //    }
 
-//    public void openEnableLocationServicesDialog(final Activity activity) {
-//        final Dialog alertDialog = new Dialog(activity);
-//        alertDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-//        alertDialog.setContentView(R.layout.dialog_sentence);
-//
-//        TextView tvTitle = (TextView) alertDialog.findViewById(R.id.tvTitleDialogSentence);
-//        tvTitle.setText(Util.getString(mContext,
-//                R.string.enableLocationServicesTitle));
-//
-//        TextView tvMessage = (TextView) alertDialog.findViewById(R.id.tvMessageDialogSentence);
-//        tvMessage.setText(Util.getString(mContext,
-//                R.string.enableLocationServices));
-//
-//        Button btOk = (Button) alertDialog.findViewById(R.id.btOkDialogSentence);
-//        btOk.setText(Util.getString(mContext, R.string.positiveSentence));
-//        btOk.setOnClickListener(new View.OnClickListener() {
-//
-//            @Override
-//            public void onClick(final View v) {
-//                final Intent i = new Intent(
-//                        Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-//                activity.startActivity(i);
-//                alertDialog.dismiss();
-//            }
-//        });
-//
-//        Button btCancel = (Button) alertDialog.findViewById(R.id.btCancelDialogSentence);
-//        btCancel.setText(Util.getString(mContext, R.string.negativeSentence));
-//        btCancel.setOnClickListener(new View.OnClickListener() {
-//
-//            @Override
-//            public void onClick(final View v) {
-//                Log.i("Negative onClick dialog", "not implemented");
-//                alertDialog.dismiss();
-//            }
-//        });
-//
-//        alertDialog.show();
-//    }
+    public void openEnableLocationServicesDialog(final Activity activity) {
+        MaterialDialog.Builder builder = new MaterialDialog.Builder(activity)
+            .title(R.string.notice)
+            .content(R.string.enable_location_services)
+            .positiveColorRes(R.color.colorPrimaryDark)
+            .negativeColorRes(R.color.colorPrimaryDark)
+            .positiveText("OK")  // TODO: waiting for @afollestad fix on MaterialDialogs lib
+            .negativeText(R.string.cancel)
+            .onPositive(new MaterialDialog.SingleButtonCallback() {
+                @Override
+                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    final Intent i = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                    activity.startActivity(i);
+                    dialog.dismiss();
+                }
+            })
+            .onNegative(new MaterialDialog.SingleButtonCallback() {
+                @Override
+                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    activity.finish();
+                    dialog.dismiss();
+                }
+            });
+
+        MaterialDialog alertDialog = builder.build();
+        alertDialog.show();
+    }
 
     public boolean checkLocationServicesStatus() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical">
+
+    <com.rey.material.widget.EditText
+        android:id="@+id/etLocationName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:hint="@string/newlocation_name_choosing_dialog_hint"
+        android:inputType="text"
+        android:paddingTop="4dp"
+        android:textDirection="locale"
+        android:textSize="16sp"
+        app:et_labelTextColor ="@android:color/black"
+        app:et_error="@color/error_text"
+        app:et_dividerErrorColor="@color/error_text"
+        app:et_supportTextErrorColor="@color/error_text"
+        app:et_inputId="@+id/textfield_et_label_input"
+        app:et_supportMode="none"
+        tools:targetApi="jelly_bean_mr1"/>
+
+
+    <fr.ganfra.materialspinner.MaterialSpinner
+        android:id="@+id/spLocationCategory"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        app:ms_alignLabels="false"
+        app:ms_arrowColor="@color/colorAccent"
+        app:ms_arrowSize="12dp"
+        app:ms_baseColor="@color/colorPrimaryDark"
+        app:ms_enableErrorLabel="true"
+        app:ms_enableFloatingLabel="false"
+        app:ms_errorColor="@color/error_text"
+        app:ms_highlightColor="@color/colorAccent"
+        app:ms_hint="@string/newcategory_name_choosing_dialog_hint"
+        app:ms_hintColor="@color/colorPrimaryDark"
+        app:ms_multiline="false"/>
+
+</LinearLayout>

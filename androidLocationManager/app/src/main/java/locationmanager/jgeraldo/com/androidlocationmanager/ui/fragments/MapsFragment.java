@@ -15,6 +15,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
@@ -29,10 +30,12 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.rey.material.widget.EditText;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import fr.ganfra.materialspinner.MaterialSpinner;
 import io.github.yavski.fabspeeddial.FabSpeedDial;
 import io.github.yavski.fabspeeddial.SimpleMenuListenerAdapter;
 import locationmanager.jgeraldo.com.androidlocationmanager.R;
@@ -40,6 +43,7 @@ import locationmanager.jgeraldo.com.androidlocationmanager.entities.LocationSear
 import locationmanager.jgeraldo.com.androidlocationmanager.entities.MyLocationManager;
 import locationmanager.jgeraldo.com.androidlocationmanager.storage.Preferences;
 import locationmanager.jgeraldo.com.androidlocationmanager.storage.RealmUtil;
+import locationmanager.jgeraldo.com.androidlocationmanager.storage.models.LocationCategory;
 import locationmanager.jgeraldo.com.androidlocationmanager.storage.models.MyLocation;
 import locationmanager.jgeraldo.com.androidlocationmanager.utils.Constants;
 import locationmanager.jgeraldo.com.androidlocationmanager.utils.Util;
@@ -77,6 +81,8 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
     private BitmapDescriptor myLocationIcon;
 
     private static LatLngBounds.Builder builder;
+
+    private MaterialSpinner newLocationDialogCategorySpinner = null;
 
     public MapsFragment() {
         super();
@@ -172,7 +178,15 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
                 int itemId = menuItem.getItemId();
 
                 if (itemId == R.id.ic_save_current_location) {
-                    openNewLocationNameChoosingDialog();
+                    List<LocationCategory> categories = RealmUtil.getAllLocationCategories();
+                    if (categories.size() != 0) {
+                        openNewLocationNameChoosingDialog(categories);
+                    } else {
+                        Util.showSnackBar(mActivity, Util.getString(mContext, R.string.no_categories_found));
+                    }
+                    return true;
+                } else if (itemId == R.id.ic_add_new_category) {
+                    openNewCategoryDialog();
                     return true;
                 } else if (itemId == R.id.ic_goto_my_position) {
                     if (!Util.isPermissionsGranted(Constants.LOCATION_PERMISSION_CODES, mContext)) {
@@ -360,10 +374,10 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
         alertDialog.show();
     }
 
-    private void openNewLocationNameChoosingDialog() {
+    private void openNewCategoryDialog() {
         final MaterialDialog.Builder builder = new MaterialDialog.Builder(mActivity)
-            .title(R.string.newlocation_name_choosing_dialog_title)
-            .content(R.string.newlocation_name_choosing_dialog_content)
+            .title(R.string.newcategory_name_choosing_dialog_title)
+            .content(R.string.newcategory_name_choosing_dialog_content)
             .positiveText(R.string.save)
             .onPositive(new MaterialDialog.SingleButtonCallback() {
                 @Override
@@ -371,8 +385,7 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
                     // If flow is passing here, it means that the Save button is unlocked
                     // and there are no errors.
                     String name = dialog.getInputEditText().getText().toString();
-                    RealmUtil.createNewLocation(name, "0",
-                        currentMarkerLocation.latitude, currentMarkerLocation.longitude, null);
+                    RealmUtil.createNewCategory(mActivity, name);
                     loadDatabaseLocationsOnMap();
                 }
             })
@@ -384,13 +397,13 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
                 }
             })
             .alwaysCallInputCallback()
-            .input(R.string.newlocation_name_choosing_dialog_hint, 0, false,
+            .input(R.string.newcategory_name_choosing_dialog_hint, 0, false,
                 new MaterialDialog.InputCallback() {
                     @Override
                     public void onInput(MaterialDialog dialog, CharSequence input) {
                         String name = input.toString();
-                        if (RealmUtil.locationNameAlreadyExists(name)) {
-                            dialog.getInputEditText().setError(Util.getString(mContext, R.string.newlocation_existing_name_error));
+                        if (RealmUtil.categoryNameAlreadyExists(name)) {
+                            dialog.getInputEditText().setError(Util.getString(mContext, R.string.newcategory_existing_name_error));
                             dialog.getActionButton(DialogAction.POSITIVE).setEnabled(false);
                         } else {
                             dialog.getActionButton(DialogAction.POSITIVE).setEnabled(true);
@@ -400,6 +413,65 @@ public class MapsFragment extends Fragment implements OnMapReadyCallback, Google
 
         MaterialDialog alertDialog = builder.build();
         alertDialog.show();
+    }
+
+    private void openNewLocationNameChoosingDialog(final List<LocationCategory> categories) {
+        final MaterialDialog dialog = new MaterialDialog.Builder(mActivity)
+            .title(R.string.newlocation_name_choosing_dialog_title)
+            .customView(R.layout.new_location_dialog_layout, true)
+            .autoDismiss(false)
+            .positiveText(R.string.save)
+            .onPositive(new MaterialDialog.SingleButtonCallback() {
+                @Override
+                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    View dialogView = dialog.getCustomView();
+                    boolean hasFormErrors = false;
+
+                    EditText locationName = (EditText) dialogView.findViewById(R.id.etLocationName);
+
+                    String name = locationName.getText().toString();
+                    int selectedCategory = newLocationDialogCategorySpinner.getSelectedItemPosition();
+
+                    if (name.trim().equals("") || RealmUtil.locationNameAlreadyExists(name)) {
+                        hasFormErrors = true;
+                        locationName.setError(Util.getString(mContext, R.string.newlocation_existing_name_error));
+                    }
+
+                    if (selectedCategory == 0) {
+                        hasFormErrors = true;
+                        newLocationDialogCategorySpinner.setError(Util.getString(mContext, R.string.newlocation_category_required));
+                    }
+
+                    if (!hasFormErrors) {
+                        LocationCategory categoryName = (LocationCategory) newLocationDialogCategorySpinner.getSelectedItem();
+                        RealmUtil.createNewLocation(mActivity, name, categoryName.getName(),
+                            currentMarkerLocation.latitude, currentMarkerLocation.longitude, null);
+                        loadDatabaseLocationsOnMap();
+                        dialog.dismiss();
+                    }
+                }
+            })
+            .negativeText(android.R.string.cancel)
+            .onNegative(new MaterialDialog.SingleButtonCallback() {
+                @Override
+                public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                    dialog.dismiss();
+                }
+            })
+            .build();
+
+
+        newLocationDialogCategorySpinner
+            = (MaterialSpinner) dialog.findViewById(R.id.spLocationCategory);
+
+        ArrayAdapter<LocationCategory> adapter
+            = new ArrayAdapter<>(mActivity,
+            android.R.layout.simple_spinner_item,
+            categories);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        newLocationDialogCategorySpinner.setAdapter(adapter);
+
+        dialog.show();
     }
 
     private class GetCurrentCoordinates extends AsyncTask<Void, Void, Void> {

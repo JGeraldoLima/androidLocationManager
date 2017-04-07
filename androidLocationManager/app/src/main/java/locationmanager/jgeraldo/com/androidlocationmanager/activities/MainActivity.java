@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity
             }
             // TODO run more exploration tests: what to do if it returns false?
         } else {
-            Util.openEnableLocationServicesDialog(mActivity);
+            mLocationManager.openEnableLocationServicesDialog(mActivity);
         }
     }
 

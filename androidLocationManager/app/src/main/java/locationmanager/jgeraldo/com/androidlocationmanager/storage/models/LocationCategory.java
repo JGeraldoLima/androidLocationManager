@@ -60,4 +60,9 @@ public class LocationCategory extends RealmObject {
         }
         return false;
     }
+
+    @Override
+    public String toString() {
+        return this.mName;
+    }
 }

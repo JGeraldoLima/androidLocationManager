@@ -40,4 +40,13 @@
     <string name="fab_add_new_category">Add new category</string>
     <string name="fab_add_new_poi">Add new location</string>
     <string name="google_client_not_connected">There was a problem trying to connect google client. While this not happen, locations updates willbe provided just by sattelite.</string>
+    <string name="nav_add_category">Add new locations category</string>
+    <string name="newcategory_name_choosing_dialog_title">New category</string>
+    <string name="newcategory_name_choosing_dialog_hint">Parkings</string>
+    <string name="newcategory_name_choosing_dialog_content">Insert a name for this category:</string>
+    <string name="newcategory_existing_name_error">There is already a category with same name!</string>
+    <string name="no_categories_found">There are no categories registered. To be able to create a location, you need to add a category first!</string>
+    <string name="newlocation_category_required">You need to choose a category first!</string>
+    <string name="category_created_successfully">Category %s created successfully!</string>
+    <string name="location_created_successfully">Location %s created successfully!</string>
 </resources>

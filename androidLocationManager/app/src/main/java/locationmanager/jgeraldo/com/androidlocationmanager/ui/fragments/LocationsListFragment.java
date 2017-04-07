@@ -75,7 +75,7 @@ public class LocationsListFragment extends Fragment {
             Util.checkPermissions(mActivity, Constants.LOCATION_PERMISSIONS_FLAG, Constants.LOCATION_PERMISSION_CODES,
                 Constants.LOCATION_PERMISSIONS_CODE, mFragment);
         } else {
-            Util.openEnableLocationServicesDialog(mActivity);
+            mLocationManager.openEnableLocationServicesDialog(mActivity);
         }
     }
 
@@ -136,20 +136,30 @@ public class LocationsListFragment extends Fragment {
             mExpandListCategories.add(categoryItem);
 
             List<MyLocation> categoryLocations = lc.getLocations();
-            categoryItem.createSubItems(categoryLocations.size());
-            for (int i = 0; i < categoryLocations.size(); i++) {
-                final MyLocation location = categoryLocations.get(i);
-                View subItem = categoryItem.getSubItemView(i);
-                ((TextView) subItem.findViewById(R.id.location_name)).setText(location.getName());
-                subItem.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Util.showSnackBar(mActivity, location.getName() + "Lat: " + location.getLatitude() + "; Long:" +
-                            " " +
-                            location.getLongitude());
-                    }
-                });
+            if (categoryLocations.size() > 0) {
+                categoryItem.createSubItems(categoryLocations.size());
+                for (int i = 0; i < categoryLocations.size(); i++) {
+                    final MyLocation location = categoryLocations.get(i);
+                    View subItem = categoryItem.getSubItemView(i);
+                    ((TextView) subItem.findViewById(R.id.location_name)).setText(location.getName());
+                    subItem.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Util.showSnackBar(mActivity, location.getName() + " Lat: " + location.getLatitude() + "; " +
+                                "Long:" +
+                                " " +
+                                location.getLongitude());
+                        }
+                    });
+                }
+            } else {
+                // no locations for this category, nothing to show on expand
+                // TODO: add an 'create button' on the category item layout to show up the 'save a location'
+                // create dialog
+                categoryItem.setClickable(false);
+                categoryItem.setAlpha(0.6f);
             }
+
         }
     }
 }

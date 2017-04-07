@@ -7,8 +7,11 @@
 
     <color name="colorPrimaryText">#212121</color>
     <color name="colorSecondaryText">#727272</color>
-    <color name="hint_text">#9E9E9E</color>
 
     <color name="icons_n_texts">#FFFFFF</color>
     <color name="divider">#B6B6B6</color>
+
+    <!-- Edit text colors -->
+    <color name="hint_text">#9E9E9E</color>
+    <color name="error_text">#F44336</color>
 </resources>

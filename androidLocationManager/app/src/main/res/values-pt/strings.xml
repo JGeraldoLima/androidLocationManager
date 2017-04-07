@@ -34,4 +34,13 @@
     <string name="fab_add_new_category">Adicionar categoria</string>
     <string name="fab_add_new_poi">Adicionar novo local</string>
     <string name="google_client_not_connected">Houve um problema ao tentar connectar com o cliente Google. Enquanto isso, atualizações de localização serão fornecidas apenas por satélite.</string>
+    <string name="nav_add_category">Adicionar nova categoria de locais</string>
+    <string name="newcategory_name_choosing_dialog_title">Nova categoria</string>
+    <string name="newcategory_name_choosing_dialog_hint">Estacionamentos</string>
+    <string name="newcategory_name_choosing_dialog_content">Insira um nome para esta categoria:</string>
+    <string name="newcategory_existing_name_error">Já existe uma categoria com este nome!</string>
+    <string name="no_categories_found">Não há categorias registradas. Para que seja possível salvar um local, você precisa criar uma categoria primeiro!</string>
+    <string name="newlocation_category_required">Você precisa escolher uma categoria primeiro!</string>
+    <string name="category_created_successfully">Categoria %s criada com sucesso!</string>
+    <string name="location_created_successfully">Local %s criado com sucesso!</string>
 </resources>

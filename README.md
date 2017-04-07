@@ -2,7 +2,7 @@
 
 [![GitHub license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/JGeraldoLima/androidLocationManager/blob/master/LICENSE.txt)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/JGeraldoLima/androidLocationManager/blob/master/LICENSE.txt)
-![](screens/web_hi_res_512.png =480x854)
+![](screens/web_hi_res_512.png)
 
 An complete, easy-to-use and reusable LocationManager for Android, using GoogleAPIs. 
 Plus, a direct tutorial to configure your project from start to end, resuming Google's guides and adding some tips!
